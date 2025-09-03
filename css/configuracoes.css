@@ -1,0 +1,238 @@
+/* CONFIGURAÇÕES PAGE SPECIFIC STYLES */
+
+/* Page Title */
+.page-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-left: -20px;
+}
+
+/* Config Sections */
+.config-section {
+    margin: 12px 7px;
+    margin-bottom: 16px;
+}
+
+.section-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-bottom: 8px;
+}
+
+/* Protection Level Dropdown */
+.dropdown-container {
+    position: relative;
+    background: #113247;
+    border: 0.25px solid #2F556D;
+    border-radius: 2px;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.protection-dropdown {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: #F9F3E7;
+    font-size: 8px;
+    font-weight: 400;
+    padding: 8px 12px;
+    padding-right: 28px;
+    appearance: none;
+    cursor: pointer;
+    outline: none;
+    line-height: 1.21;
+}
+
+.protection-dropdown option {
+    background: #113247;
+    color: #F9F3E7;
+    font-size: 8px;
+    font-weight: 400;
+    padding: 4px 8px;
+}
+
+.protection-dropdown:focus {
+    box-shadow: 0 0 0 2px rgba(249, 88, 64, 0.3);
+}
+
+.dropdown-arrow {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+/* Toggle Options */
+.toggle-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.toggle-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+}
+
+.toggle-container {
+    position: relative;
+}
+
+.toggle-switch {
+    display: inline-block;
+    width: 26px;
+    height: 16px;
+    background: transparent;
+    border: 1px solid #F9F3E7;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toggle-slider {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 10px;
+    height: 10px;
+    background: #F9F3E7;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+input[type="checkbox"]:checked + .toggle-switch {
+    background: #F95840;
+    border-color: #F95840;
+}
+
+input[type="checkbox"]:checked + .toggle-switch .toggle-slider {
+    transform: translateX(10px);
+    background: #F9F3E7;
+}
+
+.toggle-switch:hover {
+    opacity: 0.8;
+}
+
+/* About Option */
+.about-option {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.about-label {
+    font-size: 9px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+}
+
+.about-btn {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.about-btn:hover {
+    opacity: 0.7;
+}
+
+.external-icon {
+    width: 12px;
+    height: 12px;
+}
+
+/* Navigation Tab Override */
+.navigation .nav-tab.active {
+    color: #E45541;
+}
+
+.navigation .nav-tab.active svg {
+    stroke: #E45541;
+}
+
+/* Settings Icon Override */
+.navigation .nav-tab.active svg[viewBox*="15 14"] {
+    stroke: #E45541;
+}
+
+/* Success Messages */
+.message {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #4CAF50;
+    color: white;
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Protection Level Info */
+.protection-info {
+    margin-top: 6px;
+    font-size: 6px;
+    color: rgba(249, 243, 231, 0.7);
+    line-height: 1.2;
+}
+
+/* Responsive adjustments */
+@media (max-width: 200px) {
+    .toggle-option,
+    .about-option {
+        gap: 8px;
+    }
+    
+    .protection-dropdown {
+        font-size: 7px;
+        padding: 6px 10px;
+        padding-right: 24px;
+    }
+    
+    .toggle-switch {
+        width: 22px;
+        height: 14px;
+    }
+    
+    .toggle-slider {
+        width: 8px;
+        height: 8px;
+    }
+    
+    input[type="checkbox"]:checked + .toggle-switch .toggle-slider {
+        transform: translateX(8px);
+    }
+}

@@ -1,0 +1,256 @@
+/* DETALHES DO ALERTA PAGE SPECIFIC STYLES */
+
+/* Header Modifications */
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex: 1;
+}
+
+.back-btn {
+    background: transparent;
+    border: none;
+    color: #F9F3E7;
+    font-size: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px;
+    line-height: 1.21;
+}
+
+.back-btn:hover {
+    opacity: 0.8;
+}
+
+.page-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-left: -10px;
+}
+
+/* Alert Header */
+.alert-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 8px;
+    gap: 8px;
+}
+
+.alert-url {
+    font-size: 8px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    word-break: break-all;
+    flex: 1;
+}
+
+.whitelist-btn {
+    background: #F95840;
+    border: 1px solid #F95840;
+    border-top: 0.1px solid #F95840;
+    border-bottom: 0.25px solid #F95840;
+    border-radius: 2px;
+    color: #F9F3E7;
+    font-size: 6px;
+    font-weight: 500;
+    padding: 4px 8px;
+    cursor: pointer;
+    line-height: 1.21;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+    white-space: nowrap;
+}
+
+.whitelist-btn:hover {
+    opacity: 0.9;
+}
+
+.whitelist-btn:active {
+    transform: translateY(0.5px);
+}
+
+.whitelist-btn.added {
+    background: #4CAF50;
+    border-color: #4CAF50;
+}
+
+/* Detection Info */
+.detection-info {
+    margin: 8px;
+    margin-bottom: 12px;
+}
+
+.detection-info span {
+    font-size: 7px;
+    font-weight: 200;
+    color: #F9F3E7;
+    line-height: 1.21;
+    display: block;
+}
+
+/* AI Analysis Section */
+.ai-analysis {
+    margin: 8px;
+    margin-bottom: 12px;
+}
+
+.analysis-title {
+    font-size: 8px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-bottom: 8px;
+}
+
+.analysis-summary {
+    background: rgba(249, 243, 231, 0.1);
+    border: 1px solid #0E2A3C;
+    border-top: 0.1px solid #0E2A3C;
+    border-bottom: 0.25px solid #0E2A3C;
+    border-radius: 2px;
+    padding: 8px;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+}
+
+.threat-info {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.threat-type {
+    font-size: 7px;
+    font-weight: 200;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-bottom: 2px;
+}
+
+.confidence-level {
+    font-size: 7px;
+    font-weight: 200;
+    color: #F9F3E7;
+    line-height: 1.21;
+}
+
+/* Threat Indicators */
+.threat-indicators {
+    margin: 8px;
+    flex: 1;
+}
+
+.indicators-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    font-size: 7px;
+    font-weight: 400;
+    color: #F9F3E7;
+    line-height: 1.21;
+}
+
+.indicators-list li {
+    padding: 2px 0;
+    position: relative;
+    padding-left: 12px;
+}
+
+.indicators-list li:before {
+    content: "•";
+    color: #F95840;
+    font-weight: bold;
+    position: absolute;
+    left: 0;
+}
+
+/* Navigation Tab Override for Active State */
+.navigation .nav-tab.active {
+    color: #E45541;
+}
+
+.navigation .nav-tab.active svg {
+    stroke: #E45541;
+}
+
+/* Success States */
+.success-message {
+    background: #4CAF50;
+    color: white;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 7px;
+    font-weight: 500;
+    text-align: center;
+    margin: 8px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Loading State */
+.loading {
+    text-align: center;
+    color: #F9F3E7;
+    font-size: 7px;
+    font-weight: 300;
+    padding: 20px;
+}
+
+/* Error State */
+.error-message {
+    background: rgba(244, 67, 54, 0.1);
+    border: 1px solid #F44336;
+    color: #F44336;
+    padding: 8px;
+    border-radius: 4px;
+    font-size: 7px;
+    font-weight: 400;
+    text-align: center;
+    margin: 8px;
+}
+
+/* High Confidence Alert Styling */
+.high-confidence .threat-type {
+    color: #F95840;
+    font-weight: 500;
+}
+
+.medium-confidence .threat-type {
+    color: #FF8E7D;
+    font-weight: 400;
+}
+
+.low-confidence .threat-type {
+    color: #F9F3E7;
+    font-weight: 300;
+}
+
+/* Responsive adjustments */
+@media (max-width: 200px) {
+    .alert-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .whitelist-btn {
+        align-self: flex-end;
+        font-size: 5px;
+        padding: 3px 6px;
+    }
+    
+    .analysis-summary {
+        padding: 6px;
+    }
+}

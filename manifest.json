@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Phishy - Anti-Phishing Protection",
+  "version": "1.0.0",
+  "description": "Real-time anti-phishing protection with VirusTotal integration and AI-powered threat analysis",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "scripting",
+    "tabs",
+    "declarativeNetRequest"
+  ],
+  "host_permissions": [
+    "<all_urls>",
+    "https://www.virustotal.com/*"
+  ],
+  "background": {
+    "service_worker": "js/background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["js/content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "Phishy Protection",
+    "default_icon": {
+      "16": "icons/logo-phishy.png",
+      "32": "icons/logo-phishy.png",
+      "48": "icons/logo-phishy.png",
+      "128": "icons/logo-phishy.png"
+    }
+  },
+  "icons": {
+    "16": "icons/logo-phishy.png",
+    "32": "icons/logo-phishy.png",
+    "48": "icons/logo-phishy.png",
+    "128": "icons/logo-phishy.png"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["css/*", "js/*", "icons/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

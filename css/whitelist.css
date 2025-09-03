@@ -1,0 +1,222 @@
+/* WHITELIST PAGE SPECIFIC STYLES */
+
+/* Page Title */
+.page-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-left: -20px;
+}
+
+/* Whitelist Sections */
+.whitelist-section {
+    margin: 8px 8px;
+    margin-bottom: 12px;
+}
+
+.section-title {
+    font-size: 9px;
+    font-weight: 600;
+    color: #F9F3E7;
+    line-height: 1.21;
+    margin-bottom: 8px;
+}
+
+/* Input Container */
+.input-container {
+    background: rgba(249, 243, 231, 0.1);
+    border: 1px solid #0E2A3C;
+    border-top: 0.1px solid #0E2A3C;
+    border-bottom: 0.25px solid #0E2A3C;
+    border-radius: 2px;
+    padding: 6px;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+    height: 44px;
+}
+
+.input-group {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.url-input {
+    flex: 1;
+    background: rgba(249, 243, 231, 0.1);
+    border: 1px solid #0E2A3C;
+    border-top: 0.1px solid #0E2A3C;
+    border-bottom: 0.25px solid #0E2A3C;
+    border-radius: 2px;
+    padding: 6px 8px;
+    color: #F9F3E7;
+    font-size: 5px;
+    font-weight: 200;
+    line-height: 1.21;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+    outline: none;
+}
+
+.url-input::placeholder {
+    color: #F9F3E7;
+    opacity: 0.7;
+}
+
+.url-input:focus {
+    border-color: #F95840;
+    box-shadow: 0 0 0 2px rgba(249, 88, 64, 0.2);
+}
+
+.add-btn {
+    background: #F95840;
+    border: 1px solid #F95840;
+    border-top: 0.1px solid #F95840;
+    border-bottom: 0.25px solid #F95840;
+    border-radius: 2px;
+    color: #F9F3E7;
+    font-size: 6px;
+    font-weight: 700;
+    padding: 6px 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.21;
+    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+    min-width: 45px;
+    justify-content: center;
+}
+
+.add-btn:hover {
+    opacity: 0.9;
+}
+
+.add-btn:active {
+    transform: translateY(0.5px);
+}
+
+/* URL List */
+.url-list {
+    max-height: 32px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: #F95840 #12344A;
+}
+
+.url-list::-webkit-scrollbar {
+    width: 2px;
+}
+
+.url-list::-webkit-scrollbar-track {
+    background: #12344A;
+}
+
+.url-list::-webkit-scrollbar-thumb {
+    background: #F95840;
+    border-radius: 1px;
+}
+
+.url-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(249, 243, 231, 0.1);
+    font-size: 5px;
+    color: #F9F3E7;
+}
+
+.url-item:last-child {
+    border-bottom: none;
+}
+
+.url-text {
+    flex: 1;
+    word-break: break-all;
+    font-weight: 300;
+}
+
+.remove-btn {
+    background: transparent;
+    border: none;
+    color: #F95840;
+    cursor: pointer;
+    padding: 2px;
+    font-size: 4px;
+    line-height: 1;
+}
+
+.remove-btn:hover {
+    opacity: 0.7;
+}
+
+/* Empty State */
+.empty-list {
+    text-align: center;
+    color: rgba(249, 243, 231, 0.5);
+    font-size: 5px;
+    font-style: italic;
+    padding: 8px;
+}
+
+/* Navigation Tab Override */
+.navigation .nav-tab.active {
+    color: #E45541;
+}
+
+.navigation .nav-tab.active svg {
+    stroke: #E45541;
+}
+
+/* Success/Error Messages */
+.message {
+    position: fixed;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 8px 16px;
+    border-radius: 4px;
+    font-size: 8px;
+    font-weight: 500;
+    z-index: 1000;
+    animation: slideDown 0.3s ease;
+}
+
+.message.success {
+    background: #4CAF50;
+    color: white;
+}
+
+.message.error {
+    background: #F44336;
+    color: white;
+}
+
+@keyframes slideDown {
+    from {
+        transform: translateX(-50%) translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 200px) {
+    .input-group {
+        flex-direction: column;
+        gap: 4px;
+    }
+    
+    .add-btn {
+        align-self: flex-end;
+        min-width: 40px;
+    }
+    
+    .input-container {
+        min-height: 80px;
+    }
+}
