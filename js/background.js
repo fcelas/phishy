@@ -1,11 +1,27 @@
 class PhishyBackground {
     constructor() {
-        this.virusTotalApiKey = '502817565555cdd55c70a2a1e6703ad0913317e524780231732da90c21713897';
-        this.claudeApiKey = 'YOUR_CLAUDE_API_KEY_HERE'; // Replace with actual key
+        this.config = null;
+        this.claudeApi = null;
+        this.protectionEnabled = true;
+        this.isDemoMode = false;
+        this.logger = null;
+        
+        this.stats = {
+            totalBlocked: 0,
+            threatTypes: {
+                phishing: 0,
+                typosquatting: 0,
+                malware: 0
+            }
+        };
+        
         this.init();
     }
 
-    init() {
+    async init() {
+        // Initialize configuration first
+        await this.initializeConfig();
+        
         // Listen for messages from content script and popup
         chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             this.handleMessage(request, sender, sendResponse);
@@ -16,6 +32,46 @@ class PhishyBackground {
         chrome.runtime.onInstalled.addListener(() => {
             this.initializeStorage();
         });
+    }
+
+    async initializeConfig() {
+        try {
+            // Import logger and config manager (if available in background context)
+            if (typeof importScripts === 'function') {
+                importScripts('logger.js', 'config-manager.js');
+                
+                if (typeof PhishyLogger !== 'undefined') {
+                    this.logger = new PhishyLogger();
+                }
+                
+                if (typeof PhishyConfigManager !== 'undefined') {
+                    const configManager = new PhishyConfigManager();
+                    await configManager.loadConfig();
+                    this.config = configManager.config;
+                    this.isDemoMode = configManager.isDemoModeActive();
+                }
+            }
+            
+            // Fallback to console logging
+            if (!this.logger) {
+                this.logger = console;
+            }
+            
+            // Initialize Claude API
+            if (typeof ClaudeAPI !== 'undefined') {
+                this.claudeApi = new ClaudeAPI();
+            }
+            
+            this.logger.info('Background script initialized', {
+                demoMode: this.isDemoMode,
+                configLoaded: !!this.config
+            }, 'BACKGROUND');
+            
+        } catch (error) {
+            console.error('Failed to initialize background config:', error);
+            this.logger = console;
+            this.isDemoMode = true;
+        }
     }
 
     async initializeStorage() {
@@ -157,7 +213,16 @@ class PhishyBackground {
 
     async checkVirusTotal(url) {
         try {
-            const apiUrl = `https://www.virustotal.com/vtapi/v2/domain/report?apikey=${this.virusTotalApiKey}&domain=${encodeURIComponent(url)}`;
+            // Use demo mode if no config or in demo mode
+            if (this.isDemoMode || !this.config?.virustotal?.apiKey || 
+                this.config.virustotal.apiKey === 'DEMO_MODE' || 
+                this.config.virustotal.apiKey.includes('YOUR_')) {
+                return this.getDemoVirusTotalResult(url);
+            }
+
+            const baseUrl = this.config.virustotal.baseUrl || 'https://www.virustotal.com/vtapi/v2';
+            const endpoint = this.config.virustotal.endpoints?.urlReport || '/url/report';
+            const apiUrl = `${baseUrl}${endpoint}?apikey=${this.config.virustotal.apiKey}&resource=${encodeURIComponent(url)}`;
             
             const response = await fetch(apiUrl);
             const data = await response.json();
@@ -190,8 +255,38 @@ class PhishyBackground {
 
             return { isMalicious: false };
         } catch (error) {
-            console.error('VirusTotal API Error:', error);
+            this.logger.error('VirusTotal API Error', error, 'BACKGROUND');
             return { isMalicious: false, error: 'API unavailable' };
+        }
+    }
+
+    getDemoVirusTotalResult(url) {
+        // Simulate VirusTotal response for demo/testing
+        const fakeThreats = this.config?.development?.demoMode?.fakeThreats || [
+            'malicious-site.com',
+            'phishing-example.net', 
+            'suspicious-domain.org',
+            'fake-bank.com',
+            'evil-download.net'
+        ];
+
+        try {
+            const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+            const isMalicious = fakeThreats.some(threat => domain.includes(threat) || threat.includes(domain));
+
+            this.logger.debug('Demo VirusTotal check', { url, isMalicious }, 'BACKGROUND');
+
+            return {
+                isMalicious,
+                confidence: isMalicious ? 85 : 15,
+                threatType: isMalicious ? 'phishing' : 'safe',
+                positives: isMalicious ? 5 : 0,
+                total: 70,
+                categories: isMalicious ? ['phishing', 'suspicious'] : [],
+                source: 'virustotal-demo'
+            };
+        } catch (error) {
+            return { isMalicious: false, error: 'Invalid URL' };
         }
     }
 

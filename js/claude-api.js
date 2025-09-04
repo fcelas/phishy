@@ -1,15 +1,52 @@
 class ClaudeAPI {
-    constructor(apiKey = null) {
-        this.baseUrl = 'https://api.anthropic.com/v1/messages';
-        this.apiKey = apiKey || 'YOUR_CLAUDE_API_KEY_HERE';
-        this.isConfigured = this.apiKey !== 'YOUR_CLAUDE_API_KEY_HERE';
-        this.version = '2023-06-01';
-        this.maxRetries = 3;
-        this.requestTimeout = 10000; // 10 seconds
+    constructor() {
+        this.config = null;
+        this.isDemoMode = false;
+        this.isConfigured = false;
+        this.logger = window.logger || console;
+        
+        // Initialize with configuration
+        this.initializeConfig();
+    }
+
+    async initializeConfig() {
+        try {
+            // Wait for config manager to load
+            if (window.configManager) {
+                await window.configManager.loadConfig();
+                this.config = window.configManager.getApiConfig('claude');
+                
+                if (this.config) {
+                    this.isDemoMode = this.config.isDemoMode || window.configManager.isDemoModeActive();
+                    this.isConfigured = !this.isDemoMode && this.config.apiKey && 
+                                      !this.config.apiKey.includes('YOUR_') && 
+                                      this.config.apiKey !== 'DEMO_MODE';
+                    
+                    this.logger.info('Claude API initialized', {
+                        configured: this.isConfigured,
+                        demoMode: this.isDemoMode
+                    }, 'CLAUDE_API');
+                } else {
+                    this.logger.warn('No Claude configuration found, using fallback mode', null, 'CLAUDE_API');
+                    this.isDemoMode = true;
+                }
+            } else {
+                this.logger.warn('Config manager not available, using fallback mode', null, 'CLAUDE_API');
+                this.isDemoMode = true;
+            }
+        } catch (error) {
+            this.logger.error('Failed to initialize Claude API config', error, 'CLAUDE_API');
+            this.isDemoMode = true;
+        }
     }
 
     async analyzeThreat(url, context = {}) {
-        if (!this.isConfigured) {
+        // Ensure config is loaded
+        if (!this.config) {
+            await this.initializeConfig();
+        }
+
+        if (!this.isConfigured || this.isDemoMode) {
             return this.getFallbackAnalysis(url);
         }
 
@@ -28,16 +65,21 @@ Please provide analysis in this exact JSON format:
 }`;
 
         try {
-            const response = await this.makeRequest(prompt, { maxTokens: 200 });
+            const response = await this.makeRequest(prompt, { maxTokens: this.config.maxTokens || 200 });
             return this.parseAnalysisResponse(response.content[0].text);
         } catch (error) {
-            console.error('Claude API Error:', error);
+            this.logger.error('Claude API Error', error, 'CLAUDE_API');
             return this.getFallbackAnalysis(url);
         }
     }
 
     async generateReport(alertData) {
-        if (!this.isConfigured) {
+        // Ensure config is loaded
+        if (!this.config) {
+            await this.initializeConfig();
+        }
+
+        if (!this.isConfigured || this.isDemoMode) {
             return this.getFallbackReport(alertData);
         }
 
@@ -59,31 +101,33 @@ Format as JSON:
 }`;
 
         try {
-            const response = await this.makeRequest(prompt, { maxTokens: 300 });
+            const response = await this.makeRequest(prompt, { maxTokens: this.config.maxTokens || 300 });
             return this.parseReportResponse(response.content[0].text);
         } catch (error) {
-            console.error('Claude API Error:', error);
+            this.logger.error('Claude API Error', error, 'CLAUDE_API');
             return this.getFallbackReport(alertData);
         }
     }
 
     async makeRequest(prompt, options = {}) {
-        const { maxTokens = 150, temperature = 0.1 } = options;
+        const { maxTokens = 150, temperature = this.config.temperature || 0.1 } = options;
+        const maxRetries = 3;
+        const requestTimeout = this.config.timeout || 10000;
 
-        for (let attempt = 0; attempt < this.maxRetries; attempt++) {
+        for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), this.requestTimeout);
+                const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
 
-                const response = await fetch(this.baseUrl, {
+                const response = await fetch(this.config.baseUrl + '/messages', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'x-api-key': this.apiKey,
-                        'anthropic-version': this.version
+                        'x-api-key': this.config.apiKey,
+                        'anthropic-version': '2023-06-01'
                     },
                     body: JSON.stringify({
-                        model: 'claude-3-sonnet-20240229',
+                        model: this.config.model || 'claude-3-haiku-20240307',
                         max_tokens: maxTokens,
                         temperature,
                         messages: [{
@@ -221,15 +265,21 @@ Recomenda-se manter a proteção ativada e exercer cautela ao navegar.`,
         return new Promise(resolve => setTimeout(resolve, ms));
     }
 
-    updateApiKey(newApiKey) {
-        this.apiKey = newApiKey;
-        this.isConfigured = newApiKey && newApiKey !== 'YOUR_CLAUDE_API_KEY_HERE';
+    async updateApiKey(newApiKey) {
+        // Update config through config manager
+        if (window.configManager && window.configManager.config) {
+            window.configManager.config.claude.apiKey = newApiKey;
+            await window.configManager.saveConfig(window.configManager.config);
+            await this.initializeConfig();
+        }
     }
 
     getStatus() {
         return {
             configured: this.isConfigured,
-            apiKey: this.apiKey ? `${this.apiKey.substring(0, 8)}...` : 'Not set'
+            demoMode: this.isDemoMode,
+            apiKey: this.config?.apiKey ? `${this.config.apiKey.substring(0, 8)}...` : 'Not set',
+            model: this.config?.model || 'Not configured'
         };
     }
 }
