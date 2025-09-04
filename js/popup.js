@@ -53,9 +53,9 @@ class PhishyDashboard {
 
     setupEventListeners() {
         // Protection toggle
-        const toggleBtn = document.getElementById('toggle-indicator');
+        const toggleBtn = document.getElementById('protection-toggle');
         if (toggleBtn) {
-            toggleBtn.addEventListener('click', () => {
+            toggleBtn.addEventListener('change', () => {
                 this.toggleProtection();
             });
         }
@@ -117,14 +117,15 @@ class PhishyDashboard {
     }
 
     updateProtectionToggle() {
-        const indicator = document.getElementById('toggle-indicator');
+        const toggleCheckbox = document.getElementById('protection-toggle');
+        const toggleStatus = document.getElementById('toggle-status');
         
-        if (indicator) {
-            if (this.protectionEnabled) {
-                indicator.classList.remove('disabled');
-            } else {
-                indicator.classList.add('disabled');
-            }
+        if (toggleCheckbox) {
+            toggleCheckbox.checked = this.protectionEnabled;
+        }
+        
+        if (toggleStatus) {
+            toggleStatus.textContent = this.protectionEnabled ? 'Proteção Ativa' : 'Proteção Inativa';
         }
     }
 
@@ -169,7 +170,8 @@ class PhishyDashboard {
 
     async toggleProtection() {
         try {
-            const newState = !this.protectionEnabled;
+            const toggleCheckbox = document.getElementById('protection-toggle');
+            const newState = toggleCheckbox ? toggleCheckbox.checked : !this.protectionEnabled;
             
             await chrome.runtime.sendMessage({
                 action: 'toggleProtection',

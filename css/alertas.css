@@ -2,11 +2,11 @@
 
 /* Page Title */
 .page-title {
-    font-size: 14px;
+    font-size: 25px;
     font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
-    margin-left: -20px; /* Center alignment compensation */
+    margin-left: 16px;
 }
 
 /* Statistics Cards */
@@ -31,7 +31,7 @@
 }
 
 .stat-number {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     color: #F9F3E7;
     line-height: 1.21;
@@ -39,7 +39,7 @@
 }
 
 .stat-label {
-    font-size: 10px;
+    font-size: 12px;
     font-weight: 800;
     color: #F9F3E7;
     line-height: 1.21;
@@ -59,7 +59,7 @@
 }
 
 .alerts-title {
-    font-size: 8px;
+    font-size: 14px; /* Increased by 35% from 10px */
     font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
@@ -67,7 +67,7 @@
 }
 
 .last-alert {
-    font-size: 5px;
+    font-size: 8px; /* Increased by 35% from 6px */
     font-weight: 400;
     color: #F9F3E7;
     line-height: 1.21;
@@ -108,7 +108,7 @@
 }
 
 .alert-url {
-    font-size: 7px;
+    font-size: 11px; /* Increased by 35% from 8px */
     font-weight: 300;
     color: #F9F3E7;
     line-height: 1.21;
@@ -117,7 +117,7 @@
 }
 
 .alert-info {
-    font-size: 5px;
+    font-size: 8px; /* Increased by 35% from 6px */
     font-weight: 200;
     color: #F9F3E7;
     line-height: 1.21;
@@ -138,7 +138,7 @@
 }
 
 .confidence-label {
-    font-size: 4px;
+    font-size: 7px; /* Increased by 35% from 5px */
     font-weight: 300;
     color: #F9F3E7;
     line-height: 1.21;
@@ -147,7 +147,7 @@
 }
 
 .confidence-value {
-    font-size: 6px;
+    font-size: 9px; /* Increased by 35% from 7px */
     font-weight: 500;
     line-height: 1.21;
 }
@@ -168,7 +168,7 @@
     background: transparent;
     border: none;
     color: #F9F3E7;
-    font-size: 4px;
+    font-size: 7px; /* Increased by 35% from 5px */
     font-weight: 300;
     cursor: pointer;
     display: flex;
@@ -205,7 +205,7 @@
 .loading {
     text-align: center;
     color: #F9F3E7;
-    font-size: 7px;
+    font-size: 11px; /* Increased by 35% from 8px */
     font-weight: 300;
     padding: 20px;
 }
@@ -214,7 +214,7 @@
 .no-alerts {
     text-align: center;
     color: #F9F3E7;
-    font-size: 7px;
+    font-size: 11px; /* Increased by 35% from 8px */
     font-weight: 300;
     padding: 20px;
 }

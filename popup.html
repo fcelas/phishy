@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' https://www.virustotal.com https://api.anthropic.com; default-src 'self'">
     <title>Phishy - Dashboard</title>
     <link rel="stylesheet" href="css/styles.css">
 </head>
@@ -40,14 +41,12 @@
         <!-- Protection Toggle -->
         <div class="protection-toggle">
             <div class="toggle-container">
-                <button class="toggle-indicator" id="toggle-indicator">
-                    <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
-                        <circle cx="11" cy="11" r="10" fill="#F9F3E7" stroke="#F95840" stroke-width="2"/>
-                        <path d="m16 8-6 6-3-3" stroke="#F95840" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                </button>
+                <input type="checkbox" id="protection-toggle" checked>
+                <label for="protection-toggle" class="toggle-switch">
+                    <div class="toggle-slider"></div>
+                </label>
             </div>
-            <span class="toggle-label">Proteção Ativa</span>
+            <span class="toggle-label" id="toggle-status">Proteção Ativa</span>
         </div>
 
         <!-- Protection Rate - Removed for better UX -->
@@ -103,6 +102,8 @@
         </nav>
     </div>
 
+    <script src="js/logger.js"></script>
+    <script src="js/security.js"></script>
     <script src="js/popup.js"></script>
 </body>
 </html>

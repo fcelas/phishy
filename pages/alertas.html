@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; default-src 'self'">
     <title>Phishy - Alertas</title>
     <link rel="stylesheet" href="../css/styles.css">
     <link rel="stylesheet" href="../css/alertas.css">
@@ -79,6 +80,8 @@
         </nav>
     </div>
 
+    <script src="../js/logger.js"></script>
+    <script src="../js/security.js"></script>
     <script src="../js/alertas.js"></script>
 </body>
 </html>

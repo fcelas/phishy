@@ -12,8 +12,12 @@
   ],
   "host_permissions": [
     "<all_urls>",
-    "https://www.virustotal.com/*"
+    "https://www.virustotal.com/*",
+    "https://api.anthropic.com/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; connect-src 'self' https://www.virustotal.com https://api.anthropic.com; default-src 'self'"
+  },
   "background": {
     "service_worker": "js/background.js"
   },
@@ -28,17 +32,17 @@
     "default_popup": "popup.html",
     "default_title": "Phishy Protection",
     "default_icon": {
-      "16": "icons/logo-phishy.png",
-      "32": "icons/logo-phishy.png",
-      "48": "icons/logo-phishy.png",
-      "128": "icons/logo-phishy.png"
+      "16": "icons/logo.png",
+      "32": "icons/logo.png",
+      "48": "icons/logo.png",
+      "128": "icons/logo.png"
     }
   },
   "icons": {
-    "16": "icons/logo-phishy.png",
-    "32": "icons/logo-phishy.png",
-    "48": "icons/logo-phishy.png",
-    "128": "icons/logo-phishy.png"
+    "16": "icons/logo.png",
+    "32": "icons/logo.png",
+    "48": "icons/logo.png",
+    "128": "icons/logo.png"
   },
   "web_accessible_resources": [
     {

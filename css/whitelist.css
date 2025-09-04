@@ -2,60 +2,62 @@
 
 /* Page Title */
 .page-title {
-    font-size: 16px;
+    font-size: 25px;
     font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
-    margin-left: -20px;
+    margin-left: 16px;
 }
 
 /* Whitelist Sections */
 .whitelist-section {
-    margin: 8px 8px;
-    margin-bottom: 12px;
+    margin: 10px 10px;
+    margin-bottom: 16px;
 }
 
 .section-title {
-    font-size: 9px;
+    font-size: 14px;
     font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
-    margin-bottom: 8px;
+    margin-bottom: 10px;
 }
 
 /* Input Container */
 .input-container {
     background: rgba(249, 243, 231, 0.1);
-    border: 1px solid #0E2A3C;
-    border-top: 0.1px solid #0E2A3C;
-    border-bottom: 0.25px solid #0E2A3C;
-    border-radius: 2px;
-    padding: 6px;
-    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
-    height: 44px;
+    border: 1.3px solid #0E2A3C;
+    border-top: 0.13px solid #0E2A3C;
+    border-bottom: 0.33px solid #0E2A3C;
+    border-radius: 3px;
+    padding: 8px;
+    box-shadow: 0.7px 0.7px 1.3px 0px rgba(0, 0, 0, 0.2);
+    height: 80px;
 }
 
 .input-group {
     display: flex;
     align-items: center;
-    gap: 6px;
-    margin-bottom: 6px;
+    gap: 8px;
+    margin-bottom: 8px;
+    width: 100%;
 }
 
 .url-input {
     flex: 1;
     background: rgba(249, 243, 231, 0.1);
-    border: 1px solid #0E2A3C;
-    border-top: 0.1px solid #0E2A3C;
-    border-bottom: 0.25px solid #0E2A3C;
-    border-radius: 2px;
-    padding: 6px 8px;
+    border: 1.3px solid #0E2A3C;
+    border-top: 0.13px solid #0E2A3C;
+    border-bottom: 0.33px solid #0E2A3C;
+    border-radius: 3px;
+    padding: 8px 10px;
     color: #F9F3E7;
-    font-size: 5px;
+    font-size: 9px;
     font-weight: 200;
     line-height: 1.21;
-    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
+    box-shadow: 0.7px 0.7px 1.3px 0px rgba(0, 0, 0, 0.2);
     outline: none;
+    max-width: calc(100% - 75px);
 }
 
 .url-input::placeholder {
@@ -70,21 +72,21 @@
 
 .add-btn {
     background: #F95840;
-    border: 1px solid #F95840;
-    border-top: 0.1px solid #F95840;
-    border-bottom: 0.25px solid #F95840;
-    border-radius: 2px;
+    border: 1.3px solid #F95840;
+    border-top: 0.13px solid #F95840;
+    border-bottom: 0.33px solid #F95840;
+    border-radius: 3px;
     color: #F9F3E7;
-    font-size: 6px;
+    font-size: 10px;
     font-weight: 700;
-    padding: 6px 8px;
+    padding: 8px 10px;
     cursor: pointer;
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     line-height: 1.21;
-    box-shadow: 0.5px 0.5px 1px 0px rgba(0, 0, 0, 0.2);
-    min-width: 45px;
+    box-shadow: 0.7px 0.7px 1.3px 0px rgba(0, 0, 0, 0.2);
+    min-width: 59px;
     justify-content: center;
 }
 
@@ -98,14 +100,14 @@
 
 /* URL List */
 .url-list {
-    max-height: 32px;
+    max-height: 60px;
     overflow-y: auto;
     scrollbar-width: thin;
     scrollbar-color: #F95840 #12344A;
 }
 
 .url-list::-webkit-scrollbar {
-    width: 2px;
+    width: 3px;
 }
 
 .url-list::-webkit-scrollbar-track {
@@ -114,16 +116,16 @@
 
 .url-list::-webkit-scrollbar-thumb {
     background: #F95840;
-    border-radius: 1px;
+    border-radius: 1.5px;
 }
 
 .url-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 4px 0;
-    border-bottom: 1px solid rgba(249, 243, 231, 0.1);
-    font-size: 5px;
+    padding: 5px 0;
+    border-bottom: 1.3px solid rgba(249, 243, 231, 0.1);
+    font-size: 9px;
     color: #F9F3E7;
 }
 
@@ -142,9 +144,14 @@
     border: none;
     color: #F95840;
     cursor: pointer;
-    padding: 2px;
-    font-size: 4px;
+    padding: 3px;
+    font-size: 6px;
     line-height: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
 }
 
 .remove-btn:hover {
@@ -155,9 +162,9 @@
 .empty-list {
     text-align: center;
     color: rgba(249, 243, 231, 0.5);
-    font-size: 5px;
+    font-size: 9px;
     font-style: italic;
-    padding: 8px;
+    padding: 10px;
 }
 
 /* Navigation Tab Override */
@@ -172,12 +179,12 @@
 /* Success/Error Messages */
 .message {
     position: fixed;
-    top: 10px;
+    top: 13px;
     left: 50%;
     transform: translateX(-50%);
-    padding: 8px 16px;
-    border-radius: 4px;
-    font-size: 8px;
+    padding: 10px 21px;
+    border-radius: 5px;
+    font-size: 12px;
     font-weight: 500;
     z-index: 1000;
     animation: slideDown 0.3s ease;

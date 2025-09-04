@@ -132,18 +132,38 @@ class PhishyWhitelist {
         const input = document.getElementById('pause-url-input');
         const url = input.value.trim();
 
+        // Input validation with security
         if (!url) {
             this.showMessage('Digite uma URL válida', 'error');
+            if (window.logger) window.logger.warn('Empty URL input attempted', null, 'WHITELIST');
             return;
         }
 
-        if (this.pauseUrls.includes(url)) {
+        // Security validation
+        if (window.security) {
+            const validation = window.security.validateUrl(url);
+            if (!validation.valid) {
+                this.showMessage(`URL inválida: ${validation.errors[0]}`, 'error');
+                if (window.logger) window.logger.warn('Invalid URL rejected', { url, errors: validation.errors }, 'WHITELIST');
+                return;
+            }
+        }
+
+        const cleanUrl = this.cleanUrl(url);
+
+        if (this.pauseUrls.includes(cleanUrl)) {
             this.showMessage('URL já está na lista', 'error');
+            if (window.logger) window.logger.info('Duplicate URL attempted', { url: cleanUrl }, 'WHITELIST');
+            return;
+        }
+
+        // Rate limiting
+        if (window.security && !window.security.uiRateLimit('addPauseUrl')) {
+            this.showMessage('Muitas tentativas. Tente novamente em alguns segundos.', 'error');
             return;
         }
 
         try {
-            const cleanUrl = this.cleanUrl(url);
             this.pauseUrls.push(cleanUrl);
             
             await chrome.runtime.sendMessage({
@@ -154,9 +174,23 @@ class PhishyWhitelist {
             input.value = '';
             this.renderPauseUrls();
             this.showMessage('URL adicionada com sucesso', 'success');
+            
+            if (window.logger) {
+                window.logger.info('URL added to pause list', { url: cleanUrl }, 'WHITELIST');
+            }
         } catch (error) {
             console.error('Error adding pause URL:', error);
             this.showMessage('Erro ao adicionar URL', 'error');
+            
+            if (window.logger) {
+                window.logger.error('Failed to add pause URL', error, 'WHITELIST');
+            }
+            
+            // Rollback on error
+            const index = this.pauseUrls.indexOf(cleanUrl);
+            if (index > -1) {
+                this.pauseUrls.splice(index, 1);
+            }
         }
     }
 

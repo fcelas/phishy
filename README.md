@@ -25,8 +25,6 @@ Uma extensão de navegador Chrome/Chromium para proteção anti-phishing em temp
 
 ### Pré-requisitos
 - Google Chrome ou Chromium
-- API Key do VirusTotal
-- API Key do Claude (opcional)
 
 ### Passos de Instalação
 
@@ -35,10 +33,6 @@ Uma extensão de navegador Chrome/Chromium para proteção anti-phishing em temp
    git clone [repository-url]
    cd phishy
    ```
-
-2. **Configurar APIs**:
-   - VirusTotal API já está configurada
-   - Para Claude AI: substitua `YOUR_CLAUDE_API_KEY_HERE` em `js/background.js` linha 4
 
 3. **Instalar no Chrome**:
    - Abra `chrome://extensions/`
@@ -53,51 +47,39 @@ phishy/
 ├── manifest.json           # Configuração da extensão
 ├── popup.html             # Interface do dashboard
 ├── css/
-│   └── styles.css         # Estilos do dashboard
+│   ├── styles.css         # Estilos principais e dashboard
+│   ├── alertas.css        # Estilos da página de alertas
+│   ├── whitelist.css      # Estilos da página de whitelist
+│   └── configuracoes.css  # Estilos da página de configurações
 ├── js/
 │   ├── background.js      # Script principal da extensão
 │   ├── content.js         # Script de detecção de links
 │   ├── popup.js           # Lógica do dashboard
-│   └── claude-api.js      # Integração com Claude AI
-├── icons/                 # Ícones da extensão (adicionar)
+│   ├── alertas.js         # Lógica da página de alertas
+│   ├── whitelist.js       # Lógica da página de whitelist
+│   ├── configuracoes.js   # Lógica da página de configurações
+│   ├── perfil.js          # Lógica da página de perfil
+│   ├── detalhes-alerta.js # Lógica dos detalhes de alertas
+│   ├── claude-api.js      # Integração com Claude AI
+│   ├── logger.js          # Sistema de logging e troubleshooting
+│   └── security.js        # Módulo de segurança e validação
+├── pages/
+│   ├── alertas.html       # Página de histórico de alertas
+│   ├── whitelist.html     # Página de gerenciamento de whitelist
+│   ├── configuracoes.html # Página de configurações
+│   ├── perfil.html        # Página de perfil do usuário
+│   └── detalhes-alerta.html # Página de detalhes de alertas
+├── tests/
+│   ├── test-runner.html   # Interface para execução de testes
+│   ├── test-framework.js  # Framework de testes customizado
+│   ├── test-runner.js     # Orquestrador dos testes
+│   ├── security.test.js   # Testes de segurança
+│   ├── unit.test.js       # Testes unitários
+│   └── integration.test.js # Testes de integração
+├── icons/
+│   └── logo.png           # Ícone da extensão
 └── README.md             # Este arquivo
 ```
-
-## 🔧 Configuração
-
-### API do VirusTotal
-A API key já está configurada: `502817565555cdd55c70a2a1e6703ad0913317e524780231732da90c21713897`
-
-### API do Claude (Opcional)
-1. Obtenha uma API key do Claude AI
-2. Substitua `YOUR_CLAUDE_API_KEY_HERE` em `js/background.js`
-3. A extensão funciona sem Claude, mas com relatórios simplificados
-
-
-## 🎯 Como Usar
-
-1. **Ativar Proteção**: Use o toggle no dashboard
-2. **Monitorar Estatísticas**: Veja links bloqueados e taxa de proteção
-3. **Visualizar Ameaças**: Principais tipos detectados são exibidos
-4. **Configurar Whitelist**: Adicione sites confiáveis (em desenvolvimento)
-
-## 🛡️ Segurança
-
-- Todas as análises são feitas via APIs externas
-- Nenhum dado sensível é armazenado localmente
-- Links suspeitos são bloqueados preventivamente
-- Usuário pode prosseguir por conta própria se desejar
-
-## 🚧 Desenvolvimento
-
-### Próximas Funcionalidades
-
-- [ ] Página de Alertas completa
-- [ ] Sistema de Whitelist
-- [ ] Configurações avançadas
-- [ ] Página de perfil do usuário
-- [ ] Exportação de relatórios
-- [ ] Integração com mais APIs de segurança
 
 ### APIs Utilizadas
 
@@ -114,19 +96,6 @@ O dashboard principal exibe:
 - Taxa de proteção (precisão)
 - Top 3 tipos de ameaça mais comuns
 - Toggle para ativar/desativar proteção
-
-## 🤝 Contribuição
-
-Para contribuir:
-1. Fork o projeto
-2. Crie uma branch para sua feature
-3. Commit suas mudanças
-4. Push para a branch
-5. Abra um Pull Request
-
-## 📝 Licença
-
-Este projeto está sob licença MIT. Veja o arquivo LICENSE para detalhes.
 
 ## ⚠️ Aviso Legal
 
