@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug - Detecção Phishy</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+        .test-section { margin: 30px 0; padding: 20px; border: 1px solid #ddd; border-radius: 8px; }
+        .safe { background-color: #e8f5e8; border-color: #4CAF50; }
+        .malicious { background-color: #ffeaea; border-color: #f44336; }
+        button { padding: 10px 20px; background: #2196F3; color: white; border: none; border-radius: 4px; cursor: pointer; margin: 5px; }
+        .result { margin-top: 15px; padding: 10px; background: #f5f5f5; border-radius: 4px; }
+        pre { background: #333; color: #fff; padding: 10px; border-radius: 4px; overflow-x: auto; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Debug da Detecção de URLs - Phishy</h1>
+    
+    <div class="test-section safe">
+        <h2>✅ URLs Benignas (devem ser seguras)</h2>
+        <p>Estas URLs devem ser classificadas como seguras:</p>
+        <ul>
+            <li><a href="https://example.com">example.com</a> - domínio padrão</li>
+            <li><a href="https://google.com">google.com</a> - domínio confiável</li>
+            <li><a href="https://github.com">github.com</a> - código fonte</li>
+        </ul>
+        
+        <h3>URLs em texto:</h3>
+        <div style="background: #f9f9f9; padding: 10px; margin: 10px 0;">
+            <p>Visite example.com para mais informações.</p>
+            <p>Código disponível em github.com/usuario/projeto</p>
+            <p>Busque em google.com se precisar de ajuda.</p>
+        </div>
+    </div>
+
+    <div class="test-section malicious">
+        <h2>🚨 URLs Maliciosas (devem ser detectadas)</h2>
+        <p>Estas URLs devem ser detectadas como maliciosas:</p>
+        <ul>
+            <li><a href="https://fake-bank.com/login">fake-bank.com</a> - banco falso</li>
+            <li><a href="https://phishing-example.net">phishing-example.net</a> - phishing</li>
+            <li><a href="https://malicious-site.com">malicious-site.com</a> - site malicioso</li>
+        </ul>
+        
+        <h3>URLs maliciosas em texto:</h3>
+        <div style="background: #f9f9f9; padding: 10px; margin: 10px 0;">
+            <p>Cuidado com fake-bank.com/login - site de phishing!</p>
+            <p>Evite phishing-example.net que rouba dados.</p>
+            <p>Site malicious-site.com detectado como ameaça.</p>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔧 Ferramentas de Debug</h2>
+        <button onclick="checkExtensionStatus()">Verificar Status da Extensão</button>
+        <button onclick="checkAlertHistory()">Ver Histórico de Alertas</button>
+        <button onclick="testDetection()">Testar Detecção Manual</button>
+        <button onclick="clearLogs()">Limpar Console</button>
+        
+        <div id="debug-results" class="result"></div>
+    </div>
+
+    <script>
+        console.log('🔍 Página de debug carregada');
+
+        function checkExtensionStatus() {
+            const results = document.getElementById('debug-results');
+            
+            if (typeof chrome !== 'undefined' && chrome.runtime) {
+                results.innerHTML = `
+                    <h3>Status da Extensão</h3>
+                    <p>✅ Chrome Runtime disponível</p>
+                    <p>Extension ID: ${chrome.runtime.id}</p>
+                    <p>Verificando comunicação com background script...</p>
+                `;
+                
+                chrome.runtime.sendMessage({action: 'getStatus'}, (response) => {
+                    if (response) {
+                        results.innerHTML += `
+                            <pre>${JSON.stringify(response, null, 2)}</pre>
+                        `;
+                    } else {
+                        results.innerHTML += `<p>❌ Sem resposta do background script</p>`;
+                    }
+                });
+            } else {
+                results.innerHTML = `
+                    <h3>Status da Extensão</h3>
+                    <p>❌ Extensão não encontrada ou não ativa</p>
+                `;
+            }
+        }
+
+        function checkAlertHistory() {
+            const results = document.getElementById('debug-results');
+            
+            if (typeof chrome !== 'undefined' && chrome.storage) {
+                chrome.storage.sync.get(['alertHistory'], (result) => {
+                    const alerts = result.alertHistory || [];
+                    results.innerHTML = `
+                        <h3>Histórico de Alertas</h3>
+                        <p>Total de alertas: ${alerts.length}</p>
+                        <pre>${JSON.stringify(alerts.slice(0, 5), null, 2)}</pre>
+                        ${alerts.length > 5 ? '<p>... (mostrando apenas os 5 mais recentes)</p>' : ''}
+                    `;
+                });
+            } else {
+                results.innerHTML = `<p>❌ Chrome Storage não disponível</p>`;
+            }
+        }
+
+        function testDetection() {
+            const results = document.getElementById('debug-results');
+            const testUrls = [
+                'example.com',
+                'fake-bank.com', 
+                'google.com',
+                'phishing-example.net'
+            ];
+            
+            results.innerHTML = '<h3>Testando Detecção...</h3>';
+            
+            testUrls.forEach((url, index) => {
+                setTimeout(() => {
+                    console.log(`🧪 Testando: ${url}`);
+                    
+                    chrome.runtime.sendMessage({
+                        action: 'analyzeUrl',
+                        url: url
+                    }, (response) => {
+                        const status = response?.isMalicious ? '🚨 MALICIOSO' : '✅ SEGURO';
+                        const details = response ? JSON.stringify(response, null, 2) : 'Sem resposta';
+                        
+                        results.innerHTML += `
+                            <div style="margin: 10px 0; padding: 10px; border: 1px solid #ddd;">
+                                <strong>${url}</strong>: ${status}
+                                <details>
+                                    <summary>Detalhes</summary>
+                                    <pre style="font-size: 11px;">${details}</pre>
+                                </details>
+                            </div>
+                        `;
+                        
+                        console.log(`📊 Resultado para ${url}:`, response);
+                    });
+                }, index * 1000); // Delay to avoid rate limits
+            });
+        }
+
+        function clearLogs() {
+            console.clear();
+            document.getElementById('debug-results').innerHTML = '<p>Console limpo.</p>';
+        }
+
+        // Auto-check status on load
+        setTimeout(checkExtensionStatus, 1000);
+        
+        // Log page loads
+        console.log('📄 Página de debug pronta para testes');
+        console.log('🛡️ Aguarde a extensão Phishy analisar os links...');
+    </script>
+</body>
+</html>

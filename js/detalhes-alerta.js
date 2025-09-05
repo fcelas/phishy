@@ -11,18 +11,26 @@ class PhishyAlertDetails {
 
     async loadAlertDetails() {
         try {
+            console.log('🔍 Loading alert details...');
+            
             // Get the selected alert ID from storage
             const result = await chrome.storage.local.get(['selectedAlertId']);
+            console.log('📋 Selected alert ID from storage:', result.selectedAlertId);
+            
             if (!result.selectedAlertId) {
+                console.error('❌ No alert ID found in storage');
                 this.showError('Alerta não encontrado');
                 return;
             }
 
             // Get the alert details from the background script
+            console.log('📡 Requesting alert details from background...');
             const response = await chrome.runtime.sendMessage({
                 action: 'getAlertDetails',
                 alertId: result.selectedAlertId
             });
+            
+            console.log('📊 Alert details response:', response);
 
             if (response && response.alert) {
                 this.currentAlert = response.alert;
@@ -65,11 +73,35 @@ class PhishyAlertDetails {
             confidenceLevelElement.textContent = `Nível de Confiança: ${this.currentAlert.confidence}%`;
         }
 
+        // Update AI summary
+        this.renderAISummary();
+
         // Update threat indicators
         this.renderThreatIndicators();
 
         // Apply confidence styling
         this.applyConfidenceClass(this.currentAlert.confidence);
+    }
+
+    renderAISummary() {
+        const analysisSummary = document.querySelector('.analysis-summary .threat-info');
+        if (!analysisSummary || !this.currentAlert) return;
+
+        // Check if we already have a summary text element
+        let summaryTextElement = analysisSummary.querySelector('.ai-summary-text');
+        
+        if (!summaryTextElement) {
+            summaryTextElement = document.createElement('div');
+            summaryTextElement.className = 'ai-summary-text';
+            analysisSummary.appendChild(summaryTextElement);
+        }
+
+        // Get AI summary from alert data
+        const aiSummary = this.currentAlert.aiSummary || 
+                         this.currentAlert.aiReport?.summary || 
+                         'Análise de IA não disponível para este alerta.';
+        
+        summaryTextElement.textContent = aiSummary;
     }
 
     renderThreatIndicators() {

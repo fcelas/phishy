@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teste de URLs em Texto - Phishy</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5; 
+            line-height: 1.6;
+        }
+        .container { 
+            max-width: 800px; 
+            margin: 0 auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+        }
+        .test-section { 
+            margin: 20px 0; 
+            padding: 15px; 
+            border: 1px solid #ddd; 
+            border-radius: 4px; 
+        }
+        .malicious { 
+            background-color: #ffe6e6; 
+            border-color: #ff9999; 
+        }
+        .safe { 
+            background-color: #e6ffe6; 
+            border-color: #99ff99; 
+        }
+        .test-text {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        button { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer; 
+        }
+        .btn-primary { 
+            background: #007bff; 
+            color: white; 
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Teste de Detecção de URLs em Texto - Phishy</h1>
+        
+        <div class="test-section">
+            <h2>📋 Instruções</h2>
+            <p>Esta página testa a capacidade da extensão Phishy de detectar URLs maliciosas em texto comum (não clicáveis).</p>
+            <p><strong>Como funciona:</strong> URLs maliciosas no texto devem aparecer destacadas em vermelho com um ícone de alerta.</p>
+        </div>
+
+        <div class="test-section malicious">
+            <h2>🚨 URLs Maliciosas em Texto</h2>
+            <p>Estas URLs devem ser detectadas e destacadas:</p>
+            
+            <div class="test-text">
+                <p>Confira este site suspeito: malicious-site.com - muito perigoso!</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Link de phishing encontrado: https://phishing-example.net/login</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Cuidado com suspicious-domain.org/download, pode conter malware.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Site falso detectado: www.fake-bank.com/secure - não acesse!</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Múltiplas ameaças: evil-download.net e badsite.com são perigosos.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Novos tipos de ameaça: jquery-web.com e jsreload.pw detectados.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Domínios especiais: kotl.space, ddns.net, static-ddns.net são suspeitos.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Subdomínios: api.malicious.com e test.phishing.org podem ser perigosos.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>IPs suspeitos: 203.0.113.1 e 198.51.100.42/admin são ameaças.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Novos TLDs: threat.app, hack.dev, scam.io, fake.sh, evil.pw detectados.</p>
+            </div>
+        </div>
+
+        <div class="test-section safe">
+            <h2>✅ URLs Seguras em Texto</h2>
+            <p>Estas URLs devem ser consideradas seguras (sem destaque):</p>
+            
+            <div class="test-text">
+                <p>Site confiável: google.com é seguro para usar.</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Repositório de código: https://github.com/usuario/projeto</p>
+            </div>
+            
+            <div class="test-text">
+                <p>Para ajuda, visite stackoverflow.com ou mozilla.org</p>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h2>🔄 Teste Dinâmico</h2>
+            <p>Clique no botão para adicionar URLs maliciosas dinamicamente:</p>
+            <button class="btn-primary" id="add-malicious-text">Adicionar Texto Malicioso</button>
+            <div id="dynamic-content" style="margin-top: 15px;"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Status da Extensão</h2>
+            <button class="btn-primary" id="check-detection">Verificar Detecção</button>
+            <div id="status-display" style="margin-top: 10px;"></div>
+        </div>
+    </div>
+
+    <script>
+        let testCounter = 1;
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            // Event listeners
+            document.getElementById('add-malicious-text').addEventListener('click', addMaliciousText);
+            document.getElementById('check-detection').addEventListener('click', checkDetection);
+            
+            // Auto-check após carregamento
+            setTimeout(checkDetection, 3000);
+        });
+
+        function addMaliciousText() {
+            const container = document.getElementById('dynamic-content');
+            const maliciousUrls = [
+                'scamsite.net/fake-login',
+                'https://hacksite.net/exploit',
+                'www.malware-download.org/virus.exe',
+                'phishing.example.com/steal-data'
+            ];
+            
+            const randomUrl = maliciousUrls[Math.floor(Math.random() * maliciousUrls.length)];
+            
+            const textDiv = document.createElement('div');
+            textDiv.className = 'test-text';
+            textDiv.innerHTML = `<p>[Teste ${testCounter}] URL maliciosa adicionada: ${randomUrl} - deve ser destacada!</p>`;
+            
+            container.appendChild(textDiv);
+            testCounter++;
+            
+            console.log(`🧪 URL maliciosa adicionada dinamicamente: ${randomUrl}`);
+        }
+
+        function checkDetection() {
+            const statusDiv = document.getElementById('status-display');
+            
+            setTimeout(() => {
+                const highlightedUrls = document.querySelectorAll('.phishy-text-url-highlight');
+                const totalUrls = document.querySelectorAll('.test-text').length;
+                
+                let status = `
+                    <p><strong>Status da Detecção:</strong></p>
+                    <ul>
+                        <li>URLs destacadas como maliciosas: <strong>${highlightedUrls.length}</strong></li>
+                        <li>Total de seções de texto: <strong>${totalUrls}</strong></li>
+                        <li>Extensão ativa: <strong>${highlightedUrls.length > 0 ? 'SIM' : 'Verificando...'}</strong></li>
+                    </ul>
+                `;
+                
+                if (highlightedUrls.length > 0) {
+                    status += '<p style="color: green;">✅ <strong>Detecção funcionando!</strong> URLs maliciosas foram destacadas.</p>';
+                    
+                    // List detected URLs
+                    status += '<p><strong>URLs detectadas:</strong></p><ul>';
+                    highlightedUrls.forEach(url => {
+                        status += `<li>${url.textContent}</li>`;
+                    });
+                    status += '</ul>';
+                } else {
+                    status += '<p style="color: orange;">⚠️ Nenhuma URL foi destacada. Verifique se a extensão está ativa ou aguarde alguns segundos.</p>';
+                }
+                
+                statusDiv.innerHTML = status;
+                
+                console.log(`📊 Verificação: ${highlightedUrls.length} URLs destacadas de ${totalUrls} seções de texto`);
+            }, 1000);
+        }
+
+        // Log para debug
+        console.log('🧪 Página de teste de URLs em texto carregada');
+        console.log('📄 Aguarde a extensão Phishy analisar o texto...');
+    </script>
+</body>
+</html>

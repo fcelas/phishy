@@ -5,6 +5,14 @@ class ClaudeAPI {
         this.isConfigured = false;
         this.logger = window.logger || console;
         
+        // Rate limiting
+        this.requestQueue = [];
+        this.lastRequestTime = 0;
+        this.requestCount = 0;
+        this.rateLimitWindow = 60 * 1000; // 1 minute
+        this.maxRequestsPerMinute = 10; // Conservative limit
+        this.minRequestInterval = 1000; // 1 second between requests
+        
         // Initialize with configuration
         this.initializeConfig();
     }
@@ -68,7 +76,16 @@ Please provide analysis in this exact JSON format:
             const response = await this.makeRequest(prompt, { maxTokens: this.config.maxTokens || 200 });
             return this.parseAnalysisResponse(response.content[0].text);
         } catch (error) {
-            this.logger.error('Claude API Error', error, 'CLAUDE_API');
+            // Handle quota errors specifically
+            if (error.message.includes('MAX_WRITE_OPERATIONS_PER_MINUTE') || 
+                error.message.includes('quota') ||
+                error.message.includes('rate limit')) {
+                this.logger.warn('Claude API quota exceeded, using fallback analysis', error, 'CLAUDE_API');
+                // Temporarily switch to demo mode
+                this.isDemoMode = true;
+            } else {
+                this.logger.error('Claude API Error', error, 'CLAUDE_API');
+            }
             return this.getFallbackAnalysis(url);
         }
     }
@@ -104,20 +121,44 @@ Format as JSON:
             const response = await this.makeRequest(prompt, { maxTokens: this.config.maxTokens || 300 });
             return this.parseReportResponse(response.content[0].text);
         } catch (error) {
-            this.logger.error('Claude API Error', error, 'CLAUDE_API');
+            // Handle quota errors specifically
+            if (error.message.includes('MAX_WRITE_OPERATIONS_PER_MINUTE') || 
+                error.message.includes('quota') ||
+                error.message.includes('rate limit')) {
+                this.logger.warn('Claude API quota exceeded, using fallback report', error, 'CLAUDE_API');
+                // Temporarily switch to demo mode
+                this.isDemoMode = true;
+            } else {
+                this.logger.error('Claude API Error', error, 'CLAUDE_API');
+            }
             return this.getFallbackReport(alertData);
         }
     }
 
     async makeRequest(prompt, options = {}) {
+        // Check rate limit first
+        if (!(await this.checkRateLimit())) {
+            throw new Error('MAX_WRITE_OPERATIONS_PER_MINUTE quota exceeded. Please wait before making more requests.');
+        }
+
         const { maxTokens = 150, temperature = this.config.temperature || 0.1 } = options;
         const maxRetries = 3;
         const requestTimeout = this.config.timeout || 10000;
+
+        // Enforce minimum interval between requests
+        const now = Date.now();
+        const timeSinceLastRequest = now - this.lastRequestTime;
+        if (timeSinceLastRequest < this.minRequestInterval) {
+            await this.delay(this.minRequestInterval - timeSinceLastRequest);
+        }
 
         for (let attempt = 0; attempt < maxRetries; attempt++) {
             try {
                 const controller = new AbortController();
                 const timeoutId = setTimeout(() => controller.abort(), requestTimeout);
+
+                this.lastRequestTime = Date.now();
+                this.requestCount++;
 
                 const response = await fetch(this.config.baseUrl + '/messages', {
                     method: 'POST',
@@ -141,12 +182,35 @@ Format as JSON:
                 clearTimeout(timeoutId);
 
                 if (!response.ok) {
-                    throw new Error(`Claude API error: ${response.status}`);
+                    const responseText = await response.text();
+                    
+                    // Check for specific quota errors
+                    if (response.status === 429 || responseText.includes('quota') || responseText.includes('rate limit')) {
+                        this.logger.warn('API rate limit hit, switching to demo mode temporarily', {
+                            status: response.status,
+                            responseText: responseText.substring(0, 200)
+                        }, 'CLAUDE_API');
+                        
+                        // Temporarily switch to demo mode
+                        this.isDemoMode = true;
+                        throw new Error('MAX_WRITE_OPERATIONS_PER_MINUTE quota exceeded');
+                    }
+                    
+                    throw new Error(`Claude API error: ${response.status} - ${responseText}`);
                 }
 
                 return await response.json();
             } catch (error) {
-                if (attempt === this.maxRetries - 1) {
+                this.logger.error(`Claude API request attempt ${attempt + 1} failed`, error, 'CLAUDE_API');
+                
+                // If it's a quota error, don't retry
+                if (error.message.includes('MAX_WRITE_OPERATIONS_PER_MINUTE') || 
+                    error.message.includes('quota') ||
+                    error.message.includes('rate limit')) {
+                    throw error;
+                }
+                
+                if (attempt === maxRetries - 1) {
                     throw error;
                 }
                 await this.delay(Math.pow(2, attempt) * 1000); // Exponential backoff
@@ -218,6 +282,36 @@ Format as JSON:
     }
 
     getFallbackAnalysis(url) {
+        try {
+            const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
+            
+            // Whitelist of always-safe domains
+            const safeDomains = [
+                'example.com', 'exemplo.com', 'google.com', 'github.com', 
+                'stackoverflow.com', 'mozilla.org', 'wikipedia.org',
+                'microsoft.com', 'apple.com', 'amazon.com'
+            ];
+            
+            // Always consider whitelisted domains as safe
+            const isWhitelisted = safeDomains.some(safe => 
+                domain === safe || domain.endsWith('.' + safe)
+            );
+            
+            if (isWhitelisted) {
+                return {
+                    isPhishing: false,
+                    confidence: 5,
+                    riskLevel: 'low',
+                    threatType: 'safe',
+                    indicators: [],
+                    recommendation: 'Domínio conhecido e confiável',
+                    source: 'heuristic-whitelist'
+                };
+            }
+        } catch (error) {
+            console.warn('Error parsing URL in fallback analysis:', error);
+        }
+        
         // Simple heuristic analysis when Claude is not available
         const suspiciousPatterns = [
             /bit\.ly|tinyurl|t\.co/i,
@@ -261,6 +355,25 @@ Recomenda-se manter a proteção ativada e exercer cautela ao navegar.`,
         };
     }
 
+    async checkRateLimit() {
+        const now = Date.now();
+        
+        // Clean old requests from the window
+        this.requestQueue = this.requestQueue.filter(timestamp => 
+            now - timestamp < this.rateLimitWindow
+        );
+        
+        // Check if we're under the limit
+        if (this.requestQueue.length >= this.maxRequestsPerMinute) {
+            this.logger.warn(`Rate limit exceeded: ${this.requestQueue.length}/${this.maxRequestsPerMinute} requests in the last minute`, null, 'CLAUDE_API');
+            return false;
+        }
+        
+        // Add current request to queue
+        this.requestQueue.push(now);
+        return true;
+    }
+
     delay(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
     }
@@ -279,8 +392,30 @@ Recomenda-se manter a proteção ativada e exercer cautela ao navegar.`,
             configured: this.isConfigured,
             demoMode: this.isDemoMode,
             apiKey: this.config?.apiKey ? `${this.config.apiKey.substring(0, 8)}...` : 'Not set',
-            model: this.config?.model || 'Not configured'
+            model: this.config?.model || 'Not configured',
+            requestsInWindow: this.requestQueue.length,
+            rateLimitExceeded: this.requestQueue.length >= this.maxRequestsPerMinute
         };
+    }
+
+    // Method to reset demo mode when rate limit window expires
+    resetRateLimitMode() {
+        const now = Date.now();
+        this.requestQueue = this.requestQueue.filter(timestamp => 
+            now - timestamp < this.rateLimitWindow
+        );
+        
+        // If we're back under the limit and were originally configured, exit demo mode
+        if (this.requestQueue.length < this.maxRequestsPerMinute && this.isConfigured) {
+            const wasTemporarilyInDemoMode = this.isDemoMode && this.config?.apiKey && 
+                                           !this.config.apiKey.includes('YOUR_') && 
+                                           this.config.apiKey !== 'DEMO_MODE';
+            
+            if (wasTemporarilyInDemoMode) {
+                this.isDemoMode = false;
+                this.logger.info('Exiting temporary demo mode, API calls restored', null, 'CLAUDE_API');
+            }
+        }
     }
 }
 

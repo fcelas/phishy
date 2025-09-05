@@ -31,7 +31,7 @@
 }
 
 .stat-number {
-    font-size: 12px;
+    font-size: 18px;
     font-weight: 800;
     color: #F9F3E7;
     line-height: 1.21;
@@ -39,8 +39,8 @@
 }
 
 .stat-label {
-    font-size: 12px;
-    font-weight: 800;
+    font-size: 14px;
+    font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
     text-align: center;
@@ -59,7 +59,7 @@
 }
 
 .alerts-title {
-    font-size: 14px; /* Increased by 35% from 10px */
+    font-size: 18px;
     font-weight: 600;
     color: #F9F3E7;
     line-height: 1.21;
@@ -67,7 +67,7 @@
 }
 
 .last-alert {
-    font-size: 8px; /* Increased by 35% from 6px */
+    font-size: 12px;
     font-weight: 400;
     color: #F9F3E7;
     line-height: 1.21;
@@ -108,20 +108,20 @@
 }
 
 .alert-url {
-    font-size: 11px; /* Increased by 35% from 8px */
-    font-weight: 300;
+    font-size: 14px;
+    font-weight: 500;
     color: #F9F3E7;
     line-height: 1.21;
-    margin-bottom: 3px;
+    margin-bottom: 4px;
     word-break: break-all;
 }
 
 .alert-info {
-    font-size: 8px; /* Increased by 35% from 6px */
-    font-weight: 200;
+    font-size: 12px;
+    font-weight: 400;
     color: #F9F3E7;
     line-height: 1.21;
-    margin-bottom: 2px;
+    margin-bottom: 3px;
 }
 
 .alert-actions {
@@ -138,8 +138,8 @@
 }
 
 .confidence-label {
-    font-size: 7px; /* Increased by 35% from 5px */
-    font-weight: 300;
+    font-size: 10px;
+    font-weight: 400;
     color: #F9F3E7;
     line-height: 1.21;
     display: block;
@@ -147,8 +147,8 @@
 }
 
 .confidence-value {
-    font-size: 9px; /* Increased by 35% from 7px */
-    font-weight: 500;
+    font-size: 12px;
+    font-weight: 600;
     line-height: 1.21;
 }
 
@@ -168,8 +168,8 @@
     background: transparent;
     border: none;
     color: #F9F3E7;
-    font-size: 7px; /* Increased by 35% from 5px */
-    font-weight: 300;
+    font-size: 10px;
+    font-weight: 400;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -205,8 +205,8 @@
 .loading {
     text-align: center;
     color: #F9F3E7;
-    font-size: 11px; /* Increased by 35% from 8px */
-    font-weight: 300;
+    font-size: 14px;
+    font-weight: 400;
     padding: 20px;
 }
 
@@ -214,22 +214,62 @@
 .no-alerts {
     text-align: center;
     color: #F9F3E7;
-    font-size: 11px; /* Increased by 35% from 8px */
-    font-weight: 300;
+    font-size: 14px;
+    font-weight: 400;
     padding: 20px;
 }
 
 /* Responsive adjustments */
 @media (max-width: 200px) {
+    .page-title {
+        font-size: 20px;
+    }
+    
     .stat-card {
         padding: 6px 12px;
+    }
+    
+    .stat-number {
+        font-size: 16px;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+    }
+    
+    .alerts-title {
+        font-size: 16px;
+    }
+    
+    .last-alert {
+        font-size: 10px;
     }
     
     .alerts-list {
         max-height: 100px;
     }
     
+    .alert-url {
+        font-size: 12px;
+    }
+    
+    .alert-info {
+        font-size: 10px;
+    }
+    
     .alert-actions {
         gap: 6px;
+    }
+    
+    .confidence-label {
+        font-size: 9px;
+    }
+    
+    .confidence-value {
+        font-size: 10px;
+    }
+    
+    .details-btn {
+        font-size: 9px;
     }
 }

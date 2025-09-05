@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VirusTotal API Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 800px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 4px; }
+        .malicious { background-color: #ffe6e6; border-color: #ff9999; }
+        .safe { background-color: #e6ffe6; border-color: #99ff99; }
+        a { display: block; margin: 10px 0; padding: 8px; text-decoration: none; background: #f9f9f9; border-radius: 4px; }
+        button { padding: 10px 20px; margin: 5px; border: none; border-radius: 4px; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 10px; margin: 10px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 VirusTotal API Test - Phishy</h1>
+        
+        <div class="test-section">
+            <h2>🔧 Teste de API</h2>
+            <button class="btn-primary" onclick="testAPI()">Testar API do VirusTotal</button>
+            <button class="btn-danger" onclick="clearLog()">Limpar Log</button>
+            <div id="api-log" class="log"></div>
+        </div>
+
+        <div class="test-section malicious">
+            <h2>🚨 URLs Maliciosas Conhecidas (para teste)</h2>
+            <p>Estas URLs devem ser detectadas pela API real do VirusTotal:</p>
+            <a href="http://malware.wicar.org/data/java_jre17_exec.html">malware.wicar.org (teste de malware)</a>
+            <a href="http://www.eicar.org/download/eicar.com">eicar.org (teste antivírus)</a>
+            <a href="https://secure.eicar.org/eicar.com.txt">secure.eicar.org (EICAR test file)</a>
+            <a href="https://malware-traffic-analysis.net">malware-traffic-analysis.net</a>
+        </div>
+
+        <div class="test-section safe">
+            <h2>✅ URLs Seguras</h2>
+            <p>Estas URLs devem ser consideradas seguras:</p>
+            <a href="https://google.com">google.com</a>
+            <a href="https://github.com">github.com</a>
+            <a href="https://stackoverflow.com">stackoverflow.com</a>
+            <a href="https://mozilla.org">mozilla.org</a>
+        </div>
+
+        <div class="test-section">
+            <h2>📊 Status da Extensão</h2>
+            <button class="btn-primary" onclick="checkExtensionStatus()">Verificar Status</button>
+            <div id="status-log" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        function log(message, containerId = 'api-log') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            container.textContent += `[${timestamp}] ${message}\n`;
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function clearLog() {
+            document.getElementById('api-log').textContent = '';
+            document.getElementById('status-log').textContent = '';
+        }
+
+        async function testAPI() {
+            log('🔬 Iniciando teste da API do VirusTotal...');
+            
+            const testUrls = [
+                'malware.wicar.org',
+                'google.com',
+                'github.com'
+            ];
+
+            for (const url of testUrls) {
+                log(`🔍 Testando: ${url}`);
+                try {
+                    // Simular chamada para o background script
+                    if (chrome && chrome.runtime) {
+                        const response = await chrome.runtime.sendMessage({
+                            action: 'analyzeUrl',
+                            url: url
+                        });
+                        log(`📊 Resultado para ${url}: ${JSON.stringify(response, null, 2)}`);
+                    } else {
+                        log('❌ Chrome runtime não disponível');
+                    }
+                } catch (error) {
+                    log(`❌ Erro para ${url}: ${error.message}`);
+                }
+                
+                // Aguardar entre requests para respeitar rate limit
+                await new Promise(resolve => setTimeout(resolve, 2000));
+            }
+            
+            log('✅ Teste concluído');
+        }
+
+        async function checkExtensionStatus() {
+            log('🔍 Verificando status da extensão...', 'status-log');
+            
+            try {
+                if (!chrome || !chrome.runtime) {
+                    log('❌ Chrome runtime não disponível', 'status-log');
+                    return;
+                }
+                
+                log('✅ Chrome runtime disponível', 'status-log');
+                
+                // Testar conexão com background script
+                try {
+                    const response = await chrome.runtime.sendMessage({ action: 'getStats' });
+                    log(`✅ Conexão com background: ${JSON.stringify(response)}`, 'status-log');
+                } catch (error) {
+                    log(`❌ Erro de conexão com background: ${error.message}`, 'status-log');
+                }
+                
+                // Verificar se content script está ativo
+                const links = document.querySelectorAll('a').length;
+                log(`🔗 Links encontrados na página: ${links}`, 'status-log');
+                
+                const highlightedLinks = document.querySelectorAll('.phishy-malicious-highlight').length;
+                log(`🚨 Links destacados como maliciosos: ${highlightedLinks}`, 'status-log');
+                
+                // Verificar configuração
+                try {
+                    const config = await chrome.storage.sync.get(['protectionEnabled']);
+                    log(`⚙️ Proteção ativa: ${config.protectionEnabled}`, 'status-log');
+                } catch (error) {
+                    log(`❌ Erro ao verificar configuração: ${error.message}`, 'status-log');
+                }
+                
+            } catch (error) {
+                log(`❌ Erro geral: ${error.message}`, 'status-log');
+            }
+        }
+
+        // Auto-verificação ao carregar a página
+        setTimeout(() => {
+            log('📄 Página de teste carregada');
+            checkExtensionStatus();
+        }, 1000);
+    </script>
+</body>
+</html>

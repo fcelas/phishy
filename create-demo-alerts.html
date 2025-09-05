@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Criar Alertas Demo - Phishy</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f5f5f5; }
+        .container { max-width: 600px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; }
+        button { padding: 15px 25px; margin: 10px; border: none; border-radius: 4px; cursor: pointer; font-size: 16px; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .log { background: #f8f9fa; border: 1px solid #dee2e6; padding: 15px; margin: 15px 0; border-radius: 4px; font-family: monospace; white-space: pre-wrap; max-height: 400px; overflow-y: auto; }
+        .alert-item { background: #f8f9fa; border-left: 4px solid #007bff; padding: 10px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Criar Alertas Demo - Phishy</h1>
+        
+        <div>
+            <button class="btn-primary" onclick="createDemoAlerts()">Criar Alertas Demo</button>
+            <button class="btn-success" onclick="viewAlerts()">Ver Alertas</button>
+            <button class="btn-danger" onclick="clearAlerts()">Limpar Alertas</button>
+        </div>
+
+        <div id="log" class="log"></div>
+        
+        <div id="alerts-display"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logContainer = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logContainer.textContent += `[${timestamp}] ${message}\n`;
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        async function createDemoAlerts() {
+            log('🚀 Criando alertas demo...');
+            
+            try {
+                const now = new Date();
+                const demoAlerts = [
+                    {
+                        id: Date.now(),
+                        url: 'malicious-site.com/phishing-page',
+                        threatType: 'phishing',
+                        confidence: 85,
+                        aiSummary: 'Site de phishing detectado. Este site pode estar tentando roubar suas credenciais bancárias através de uma página falsa que imita um banco conhecido.',
+                        timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(),
+                        blocked: true,
+                        detectedOn: 'reddit.com',
+                        aiReport: {
+                            summary: 'Site de phishing detectado. Este site pode estar tentando roubar suas credenciais bancárias através de uma página falsa que imita um banco conhecido.',
+                            recommendation: 'block',
+                            riskLevel: 'high',
+                            source: 'claude-ai'
+                        }
+                    },
+                    {
+                        id: Date.now() + 1,
+                        url: 'suspicious-domain.org/download',
+                        threatType: 'malware',
+                        confidence: 92,
+                        aiSummary: 'Site com malware detectado. Contém software malicioso que pode danificar seu dispositivo ou roubar informações pessoais.',
+                        timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(),
+                        blocked: true,
+                        detectedOn: 'twitter.com',
+                        aiReport: {
+                            summary: 'Site com malware detectado. Contém software malicioso que pode danificar seu dispositivo ou roubar informações pessoais.',
+                            recommendation: 'block',
+                            riskLevel: 'high',
+                            source: 'claude-ai'
+                        }
+                    },
+                    {
+                        id: Date.now() + 2,
+                        url: 'fake-bank.com/secure-login',
+                        threatType: 'typosquatting',
+                        confidence: 78,
+                        aiSummary: 'Possível typosquatting detectado. Site similar ao domínio de um banco legítimo, provavelmente usado para enganar usuários.',
+                        timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(),
+                        blocked: true,
+                        detectedOn: 'facebook.com',
+                        aiReport: {
+                            summary: 'Possível typosquatting detectado. Site similar ao domínio de um banco legítimo, provavelmente usado para enganar usuários.',
+                            recommendation: 'block',
+                            riskLevel: 'medium',
+                            source: 'claude-ai'
+                        }
+                    }
+                ];
+
+                await chrome.storage.sync.set({ alertHistory: demoAlerts });
+                log(`✅ ${demoAlerts.length} alertas demo criados com sucesso!`);
+                
+                viewAlerts();
+                
+            } catch (error) {
+                log(`❌ Erro ao criar alertas demo: ${error.message}`);
+            }
+        }
+
+        async function viewAlerts() {
+            log('🔍 Carregando alertas...');
+            
+            try {
+                const result = await chrome.storage.sync.get(['alertHistory']);
+                const alerts = result.alertHistory || [];
+                
+                log(`📋 ${alerts.length} alertas encontrados`);
+                
+                const alertsDisplay = document.getElementById('alerts-display');
+                alertsDisplay.innerHTML = '<h3>Alertas Atuais:</h3>';
+                
+                if (alerts.length === 0) {
+                    alertsDisplay.innerHTML += '<p>Nenhum alerta encontrado</p>';
+                    return;
+                }
+                
+                alerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'alert-item';
+                    alertDiv.innerHTML = `
+                        <strong>ID:</strong> ${alert.id}<br>
+                        <strong>URL:</strong> ${alert.url}<br>
+                        <strong>Tipo:</strong> ${alert.threatType}<br>
+                        <strong>Confiança:</strong> ${alert.confidence}%<br>
+                        <strong>Data:</strong> ${new Date(alert.timestamp).toLocaleString()}
+                    `;
+                    alertsDisplay.appendChild(alertDiv);
+                });
+                
+            } catch (error) {
+                log(`❌ Erro ao carregar alertas: ${error.message}`);
+            }
+        }
+
+        async function clearAlerts() {
+            log('🗑️ Limpando alertas...');
+            
+            try {
+                await chrome.storage.sync.set({ alertHistory: [] });
+                log('✅ Alertas removidos com sucesso!');
+                
+                document.getElementById('alerts-display').innerHTML = '';
+                
+            } catch (error) {
+                log(`❌ Erro ao limpar alertas: ${error.message}`);
+            }
+        }
+
+        // Auto-load alerts on page load
+        setTimeout(viewAlerts, 1000);
+    </script>
+</body>
+</html>

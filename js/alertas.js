@@ -108,6 +108,22 @@ class PhishyAlertas {
             const alertElement = this.createAlertElement(alert);
             alertsList.appendChild(alertElement);
         });
+
+        // Add event listeners to details buttons
+        this.setupDetailsButtonListeners();
+    }
+
+    setupDetailsButtonListeners() {
+        const detailsButtons = document.querySelectorAll('.details-btn');
+        detailsButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const alertId = button.dataset.alertId;
+                if (alertId) {
+                    this.viewDetails(alertId);
+                }
+            });
+        });
     }
 
     createAlertElement(alert) {
@@ -130,7 +146,7 @@ class PhishyAlertas {
                     <span class="confidence-label">Confiança</span>
                     <span class="confidence-value ${confidenceClass}">${alert.confidence}%</span>
                 </div>
-                <button class="details-btn" onclick="window.phishyAlertas.viewDetails('${alert.id}')">
+                <button class="details-btn" data-alert-id="${alert.id}">
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
                         <path d="M2.5 2.5L5 5L2.5 7.5" stroke="#F95840" stroke-width="0.6" stroke-linecap="round" stroke-linejoin="round"/>
                         <circle cx="5" cy="5" r="4" stroke="currentColor" stroke-width="0.6"/>
@@ -225,8 +241,11 @@ class PhishyAlertas {
     }
 
     viewDetails(alertId) {
+        console.log('🔍 Viewing details for alert ID:', alertId);
+        
         // Store the selected alert ID for the details page
         chrome.storage.local.set({ selectedAlertId: alertId }, () => {
+            console.log('✅ Alert ID stored, navigating to details page...');
             // Navigate to details page
             window.location.href = 'detalhes-alerta.html';
         });

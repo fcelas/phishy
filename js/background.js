@@ -1,10 +1,18 @@
 class PhishyBackground {
     constructor() {
+        console.log('🔧 Phishy background script starting...');
         this.config = null;
         this.claudeApi = null;
         this.protectionEnabled = true;
         this.isDemoMode = false;
         this.logger = null;
+        
+        // Set up periodic rate limit reset
+        this.rateLimitResetInterval = setInterval(() => {
+            if (this.claudeApi && typeof this.claudeApi.resetRateLimitMode === 'function') {
+                this.claudeApi.resetRateLimitMode();
+            }
+        }, 60000); // Check every minute
         
         this.stats = {
             totalBlocked: 0,
@@ -94,7 +102,66 @@ class PhishyBackground {
             alertHistory: []
         };
 
+        // Add demo alerts for testing if in development
+        if (this.isDemoMode) {
+            defaultData.alertHistory = this.createDemoAlerts();
+        }
+
         await chrome.storage.sync.set(defaultData);
+    }
+
+    createDemoAlerts() {
+        const now = new Date();
+        return [
+            {
+                id: Date.now() - 1000,
+                url: 'malicious-site.com/phishing-page',
+                threatType: 'phishing',
+                confidence: 85,
+                aiSummary: 'Site de phishing detectado. Este site pode estar tentando roubar suas credenciais bancárias através de uma página falsa que imita um banco conhecido.',
+                timestamp: new Date(now.getTime() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+                blocked: true,
+                detectedOn: 'reddit.com',
+                aiReport: {
+                    summary: 'Site de phishing detectado. Este site pode estar tentando roubar suas credenciais bancárias através de uma página falsa que imita um banco conhecido.',
+                    recommendation: 'block',
+                    riskLevel: 'high',
+                    source: 'claude-ai'
+                }
+            },
+            {
+                id: Date.now() - 2000,
+                url: 'suspicious-domain.org/download',
+                threatType: 'malware',
+                confidence: 92,
+                aiSummary: 'Site com malware detectado. Contém software malicioso que pode danificar seu dispositivo ou roubar informações pessoais.',
+                timestamp: new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+                blocked: true,
+                detectedOn: 'twitter.com',
+                aiReport: {
+                    summary: 'Site com malware detectado. Contém software malicioso que pode danificar seu dispositivo ou roubar informações pessoais.',
+                    recommendation: 'block',
+                    riskLevel: 'high',
+                    source: 'claude-ai'
+                }
+            },
+            {
+                id: Date.now() - 3000,
+                url: 'fake-bank.com/secure-login',
+                threatType: 'typosquatting',
+                confidence: 78,
+                aiSummary: 'Possível typosquatting detectado. Site similar ao domínio de um banco legítimo, provavelmente usado para enganar usuários.',
+                timestamp: new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+                blocked: true,
+                detectedOn: 'facebook.com',
+                aiReport: {
+                    summary: 'Possível typosquatting detectado. Site similar ao domínio de um banco legítimo, provavelmente usado para enganar usuários.',
+                    recommendation: 'block',
+                    riskLevel: 'medium',
+                    source: 'claude-ai'
+                }
+            }
+        ];
     }
 
     async handleMessage(request, sender, sendResponse) {
@@ -113,6 +180,11 @@ class PhishyBackground {
                 case 'getStats':
                     const stats = await this.getStats();
                     sendResponse(stats);
+                    break;
+
+                case 'getStatus':
+                    const extensionStatus = await this.getExtensionStatus();
+                    sendResponse(extensionStatus);
                     break;
 
                 case 'toggleProtection':
@@ -181,14 +253,18 @@ class PhishyBackground {
 
     async analyzeUrl(url) {
         try {
+            console.log(`🔬 Background analyzing URL: ${url}`);
+            
             // First check whitelist
             const result = await chrome.storage.sync.get(['whitelist']);
             if (result.whitelist && result.whitelist.includes(url)) {
+                console.log(`✅ URL whitelisted: ${url}`);
                 return { isMalicious: false, reason: 'whitelisted' };
             }
 
             // Check VirusTotal
             const vtResult = await this.checkVirusTotal(url);
+            console.log(`🔍 VirusTotal result for ${url}:`, vtResult);
             
             if (vtResult.isMalicious) {
                 // If VirusTotal detects threat, get AI analysis
@@ -208,6 +284,16 @@ class PhishyBackground {
 
             return { isMalicious: false };
         } catch (error) {
+            // Handle quota errors specifically
+            if (error.message && error.message.includes('MAX_WRITE_OPERATIONS_PER_MINUTE')) {
+                this.logger.warn('API quota exceeded, using fallback analysis', error, 'BACKGROUND');
+                // Try to reset rate limit mode if possible
+                if (this.claudeApi && typeof this.claudeApi.resetRateLimitMode === 'function') {
+                    this.claudeApi.resetRateLimitMode();
+                }
+                return { isMalicious: false, error: 'API quota exceeded - using fallback analysis' };
+            }
+            
             this.logger.error('URL Analysis Error', error, 'BACKGROUND');
             return { isMalicious: false, error: error.message };
         }
@@ -215,10 +301,14 @@ class PhishyBackground {
 
     async checkVirusTotal(url) {
         try {
+            console.log(`🦠 Checking VirusTotal for: ${url}`);
+            console.log(`🔧 Demo mode: ${this.isDemoMode}, API key exists: ${!!this.config?.virustotal?.apiKey}`);
+            
             // Use demo mode if no config or in demo mode
             if (this.isDemoMode || !this.config?.virustotal?.apiKey || 
                 this.config.virustotal.apiKey === 'DEMO_MODE' || 
                 this.config.virustotal.apiKey.includes('YOUR_')) {
+                console.log(`🎭 Using demo mode for ${url}`);
                 return this.getDemoVirusTotalResult(url);
             }
 
@@ -226,6 +316,7 @@ class PhishyBackground {
             const endpoint = this.config.virustotal.endpoints?.urlReport || '/url/report';
             const apiUrl = `${baseUrl}${endpoint}?apikey=${this.config.virustotal.apiKey}&resource=${encodeURIComponent(url)}`;
             
+            console.log(`🌐 Making VirusTotal API call to: ${baseUrl}${endpoint}`);
             const response = await fetch(apiUrl);
             
             if (!response.ok) {
@@ -279,14 +370,57 @@ class PhishyBackground {
             'phishing-example.net', 
             'suspicious-domain.org',
             'fake-bank.com',
-            'evil-download.net'
+            'evil-download.net',
+            'badsite.com',
+            'hacksite.net',
+            'phishing.example.com',
+            'malware-download.org',
+            'scamsite.net'
         ];
 
         try {
             const domain = new URL(url.startsWith('http') ? url : `https://${url}`).hostname;
-            const isMalicious = fakeThreats.some(threat => domain.includes(threat) || threat.includes(domain));
+            
+            // Whitelist of always-safe domains for demo
+            const safeDomains = [
+                'example.com', 'exemplo.com', 'google.com', 'github.com', 
+                'stackoverflow.com', 'mozilla.org', 'wikipedia.org',
+                'microsoft.com', 'apple.com', 'amazon.com'
+            ];
+            
+            // Always consider whitelisted domains as safe
+            const isWhitelisted = safeDomains.some(safe => 
+                domain === safe || domain.endsWith('.' + safe)
+            );
+            
+            if (isWhitelisted) {
+                console.log(`✅ Whitelisted domain detected: ${domain}`);
+                return {
+                    isMalicious: false,
+                    confidence: 5,
+                    threatType: 'safe',
+                    positives: 0,
+                    total: 70,
+                    categories: [],
+                    source: 'virustotal-demo'
+                };
+            }
+            
+            // Fix: Use exact matching or proper domain matching, not broad includes()
+            const isMalicious = fakeThreats.some(threat => {
+                // Exact domain match
+                if (domain === threat || threat === domain) {
+                    return true;
+                }
+                // Check if the domain ends with the threat (subdomain check)
+                if (domain.endsWith('.' + threat) || threat.endsWith('.' + domain)) {
+                    return true;
+                }
+                return false;
+            });
 
-            this.logger.debug('Demo VirusTotal check', { url, isMalicious }, 'BACKGROUND');
+            console.log(`🎭 Demo VirusTotal check for ${domain}: ${isMalicious ? 'MALICIOUS' : 'SAFE'}`);
+            this.logger.debug('Demo VirusTotal check', { url, domain, isMalicious }, 'BACKGROUND');
 
             return {
                 isMalicious,
@@ -371,32 +505,44 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
     }
 
     async logThreat(url, vtResult, aiAnalysis) {
-        const result = await chrome.storage.sync.get(['alertHistory']);
-        const alertHistory = result.alertHistory || [];
+        try {
+            console.log(`📝 Logging threat for: ${url}`, vtResult);
+            
+            const result = await chrome.storage.sync.get(['alertHistory']);
+            const alertHistory = result.alertHistory || [];
 
-        const alert = {
-            id: Date.now(),
-            url,
-            threatType: vtResult.threatType,
-            confidence: vtResult.confidence,
-            aiSummary: aiAnalysis.summary,
-            timestamp: new Date().toISOString(),
-            blocked: true
-        };
+            const alert = {
+                id: Date.now(),
+                url,
+                threatType: vtResult.threatType,
+                confidence: vtResult.confidence,
+                aiSummary: aiAnalysis?.summary || 'Análise AI não disponível',
+                timestamp: new Date().toISOString(),
+                blocked: true
+            };
 
-        alertHistory.unshift(alert);
-        
-        // Keep only last 100 alerts
-        if (alertHistory.length > 100) {
-            alertHistory.splice(100);
-        }
+            // Also store current page context for the alert
+            const currentPageResult = await chrome.storage.sync.get(['currentPage']);
+            if (currentPageResult.currentPage) {
+                alert.detectedOn = currentPageResult.currentPage.url;
+            }
 
-        await chrome.storage.sync.set({ alertHistory });
-        
-        // Also store current page context for the alert
-        const currentPageResult = await chrome.storage.sync.get(['currentPage']);
-        if (currentPageResult.currentPage) {
-            alert.detectedOn = currentPageResult.currentPage.url;
+            alertHistory.unshift(alert);
+            
+            // Keep only last 100 alerts
+            if (alertHistory.length > 100) {
+                alertHistory.splice(100);
+            }
+
+            await chrome.storage.sync.set({ alertHistory });
+            
+            console.log(`✅ Alert logged successfully. Total alerts: ${alertHistory.length}`, alert);
+            
+            // Update stats
+            this.updateThreatStats(vtResult.threatType);
+            
+        } catch (error) {
+            console.error('❌ Error logging threat:', error);
         }
     }
 
@@ -425,6 +571,32 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
         await chrome.storage.sync.set({ stats });
     }
 
+    async updateThreatStats(threatType) {
+        try {
+            const result = await chrome.storage.sync.get(['stats']);
+            const stats = result.stats || {
+                totalBlocked: 0,
+                linksBlockedToday: 0,
+                falsePositives: 0,
+                threatTypes: {
+                    phishing: 0,
+                    malware: 0,
+                    typosquatting: 0,
+                    suspicious: 0
+                }
+            };
+
+            // Increment the specific threat type counter
+            if (stats.threatTypes[threatType] !== undefined) {
+                stats.threatTypes[threatType]++;
+                await chrome.storage.sync.set({ stats });
+                console.log(`📊 Updated threat stats: ${threatType} = ${stats.threatTypes[threatType]}`);
+            }
+        } catch (error) {
+            console.error('Error updating threat stats:', error);
+        }
+    }
+
     async updatePageStats(domain, action) {
         const result = await chrome.storage.sync.get(['pageStats']);
         const pageStats = result.pageStats || {};
@@ -440,6 +612,36 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
         }
 
         await chrome.storage.sync.set({ pageStats });
+    }
+
+    async getExtensionStatus() {
+        try {
+            const stats = await this.getStats();
+            const alertHistory = await this.getAlertHistory();
+            
+            return {
+                active: true,
+                protectionEnabled: this.protectionEnabled,
+                demoMode: this.isDemoMode,
+                config: {
+                    hasVirusTotal: !!this.config?.virustotal?.apiKey,
+                    hasClaude: !!this.config?.claude?.apiKey,
+                    virusTotalDemo: this.config?.virustotal?.apiKey === 'DEMO_MODE'
+                },
+                stats: {
+                    totalBlocked: stats.totalBlocked,
+                    totalAlerts: alertHistory.length,
+                    threatTypes: stats.threatTypes
+                },
+                lastUpdate: new Date().toISOString()
+            };
+        } catch (error) {
+            return { 
+                active: false, 
+                error: error.message,
+                lastUpdate: new Date().toISOString()
+            };
+        }
     }
 
     async getStats() {
@@ -491,20 +693,27 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
 
     async getAlertDetails(alertId) {
         try {
+            console.log(`🔍 Getting alert details for ID: ${alertId}`);
             const alertHistory = await this.getAlertHistory();
+            console.log(`📋 Total alerts in history: ${alertHistory.length}`);
+            
             const alert = alertHistory.find(alert => alert.id.toString() === alertId.toString());
+            console.log(`📊 Found alert:`, alert ? 'Yes' : 'No');
             
             if (alert) {
-                // Add additional processing or analysis if needed
-                return {
+                const detailedAlert = {
                     ...alert,
                     detectedOn: this.extractDomainFromContext(alert),
                     vtResults: alert.vtResults || null
                 };
+                console.log(`✅ Returning detailed alert:`, detailedAlert);
+                return detailedAlert;
             }
             
+            console.log(`❌ Alert not found for ID: ${alertId}`);
             return null;
         } catch (error) {
+            console.error('❌ Error getting alert details:', error);
             this.logger.error('Error getting alert details', error, 'BACKGROUND');
             return null;
         }
@@ -624,4 +833,6 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
 }
 
 // Initialize background script
-new PhishyBackground();
+console.log('🚀 Starting Phishy background script...');
+const phishyBackground = new PhishyBackground();
+console.log('✅ Phishy background script initialized');

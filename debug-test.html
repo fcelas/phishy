@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishy Debug Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        a { display: block; margin: 10px 0; padding: 8px; background: #f5f5f5; text-decoration: none; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Phishy Debug Test Page</h1>
+    
+    <div class="test-section">
+        <h2>🚨 Links Maliciosos (Demo)</h2>
+        <p>Estes links devem ser detectados como maliciosos:</p>
+        <a href="https://malicious-site.com/test">malicious-site.com</a>
+        <a href="https://phishing-example.net/login">phishing-example.net</a>
+        <a href="https://suspicious-domain.org/download">suspicious-domain.org</a>
+        <a href="https://fake-bank.com/secure">fake-bank.com</a>
+        <a href="https://evil-download.net/files">evil-download.net</a>
+        <a href="https://badsite.com/malware">badsite.com</a>
+        <a href="https://hacksite.net/exploit">hacksite.net</a>
+        <a href="https://scamsite.net/phishing">scamsite.net</a>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Links Seguros</h2>
+        <p>Estes links devem ser considerados seguros:</p>
+        <a href="https://google.com">google.com</a>
+        <a href="https://github.com">github.com</a>
+        <a href="https://stackoverflow.com">stackoverflow.com</a>
+        <a href="https://example.com">example.com</a>
+    </div>
+
+    <div class="test-section">
+        <h2>📊 Debug Console</h2>
+        <p>Abra o console do navegador (F12) para ver os logs de debug.</p>
+        <button id="check-extension">Verificar Extensão</button>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        document.getElementById('check-extension').addEventListener('click', function() {
+            const status = document.getElementById('status');
+            status.innerHTML = '<p>Verificando extensão... Veja o console para detalhes.</p>';
+            
+            console.log('🔍 Verificando se a extensão Phishy está funcionando...');
+            console.log('🔗 Total de links na página:', document.querySelectorAll('a').length);
+            
+            setTimeout(() => {
+                const highlightedLinks = document.querySelectorAll('.phishy-malicious-highlight');
+                if (highlightedLinks.length > 0) {
+                    status.innerHTML = `<p style="color: green;">✅ Extensão funcionando! ${highlightedLinks.length} links maliciosos detectados.</p>`;
+                    console.log('✅ Links maliciosos detectados:', highlightedLinks.length);
+                } else {
+                    status.innerHTML = '<p style="color: red;">⚠️ Nenhum link malicioso destacado. Verifique se a extensão está ativa.</p>';
+                    console.log('⚠️ Nenhum link malicioso foi destacado');
+                }
+            }, 3000);
+        });
+
+        // Auto-check após 2 segundos
+        setTimeout(() => {
+            console.log('🤖 Auto-verificação após 2 segundos...');
+            document.getElementById('check-extension').click();
+        }, 2000);
+    </script>
+</body>
+</html>
