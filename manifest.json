@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Phishy - Anti-Phishing Protection",
-  "version": "1.0.0",
+  "version": "0.0.6",
   "description": "Real-time anti-phishing protection with VirusTotal integration and AI-powered threat analysis",
   "permissions": [
     "activeTab",
@@ -46,7 +46,7 @@
   },
   "web_accessible_resources": [
     {
-      "resources": ["css/*", "js/*", "icons/*"],
+      "resources": ["css/*", "js/*", "icons/*", "config/*"],
       "matches": ["<all_urls>"]
     }
   ]

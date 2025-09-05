@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Phishy - Página de Teste</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .test-section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-section h2 {
+            color: #333;
+            margin-top: 0;
+        }
+        .link-container {
+            margin: 10px 0;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 4px;
+        }
+        .safe-link {
+            color: #2196F3;
+        }
+        .test-link {
+            color: #FF5722;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .status {
+            margin: 20px 0;
+            padding: 10px;
+            border-radius: 4px;
+            background: #e3f2fd;
+            border-left: 4px solid #2196F3;
+        }
+    </style>
+</head>
+<body>
+    <h1>🛡️ Phishy Extension - Página de Teste</h1>
+    
+    <div class="status">
+        <strong>Status:</strong> Esta página foi criada para testar a funcionalidade de destaque de URLs maliciosas da extensão Phishy.
+    </div>
+
+    <div class="test-section">
+        <h2>🔗 Links Seguros (não serão destacados)</h2>
+        <div class="link-container">
+            <p>Estes links devem permanecer normais:</p>
+            <ul>
+                <li><a href="https://www.google.com" class="safe-link">Google.com</a></li>
+                <li><a href="https://github.com" class="safe-link">GitHub.com</a></li>
+                <li><a href="https://stackoverflow.com" class="safe-link">StackOverflow.com</a></li>
+                <li><a href="https://mozilla.org" class="safe-link">Mozilla.org</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🚨 Links Maliciosos (serão destacados em VERMELHO)</h2>
+        <div class="link-container">
+            <p>Estes links devem aparecer destacados em vermelho com efeito brilhante:</p>
+            <ul>
+                <li><a href="https://malicious-site.com" class="test-link">malicious-site.com</a></li>
+                <li><a href="https://phishing-example.net" class="test-link">phishing-example.net</a></li>
+                <li><a href="https://suspicious-domain.org" class="test-link">suspicious-domain.org</a></li>
+                <li><a href="https://fake-bank.com/login" class="test-link">fake-bank.com</a></li>
+                <li><a href="https://evil-download.net" class="test-link">evil-download.net</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>⚡ Teste de Links Dinâmicos</h2>
+        <div class="link-container">
+            <p>Clique nos botões para adicionar links dinamicamente:</p>
+            <button onclick="addSafeLink()">Adicionar Link Seguro</button>
+            <button onclick="addMaliciousLink()">Adicionar Link Malicioso</button>
+            <button onclick="addMultipleMaliciousLinks()">Adicionar Múltiplos Links Maliciosos</button>
+            <div id="dynamic-links" style="margin-top: 15px;"></div>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>📋 Como Testar</h2>
+        <div class="link-container">
+            <ol>
+                <li><strong>Instale a extensão</strong> no Chrome em modo desenvolvedor</li>
+                <li><strong>Recarregue esta página</strong> após instalar</li>
+                <li><strong>Observe os links maliciosos</strong> - devem aparecer em vermelho com brilho</li>
+                <li><strong>Clique em um link malicioso</strong> - deve abrir um modal de aviso</li>
+                <li><strong>Teste links dinâmicos</strong> - use os botões acima</li>
+                <li><strong>Verifique o popup da extensão</strong> - estatísticas devem atualizar</li>
+            </ol>
+        </div>
+    </div>
+
+    <div class="test-section">
+        <h2>🔍 Comportamento Esperado</h2>
+        <div class="link-container">
+            <h3>Links Maliciosos:</h3>
+            <ul>
+                <li>✅ Fundo vermelho gradiente brilhante</li>
+                <li>✅ Texto branco com sombra</li>
+                <li>✅ Badge de alerta (🚨) antes do texto</li>
+                <li>✅ Efeito de brilho pulsante</li>
+                <li>✅ Cursor "not-allowed" no hover</li>
+                <li>✅ Tooltip com informações da ameaça</li>
+                <li>✅ Click interceptado - modal de aviso</li>
+            </ul>
+            
+            <h3>Links Seguros:</h3>
+            <ul>
+                <li>✅ Aparência normal</li>
+                <li>✅ Funcionamento normal</li>
+                <li>✅ Sem interceptação de clicks</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        let linkCounter = 1;
+
+        function addSafeLink() {
+            const container = document.getElementById('dynamic-links');
+            const link = document.createElement('p');
+            link.innerHTML = `<a href="https://example.com/safe-${linkCounter}">Link Seguro Dinâmico ${linkCounter}</a>`;
+            container.appendChild(link);
+            linkCounter++;
+        }
+
+        function addMaliciousLink() {
+            const container = document.getElementById('dynamic-links');
+            const maliciousDomains = ['malicious-site.com', 'phishing-example.net', 'suspicious-domain.org'];
+            const randomDomain = maliciousDomains[Math.floor(Math.random() * maliciousDomains.length)];
+            
+            const link = document.createElement('p');
+            link.innerHTML = `<a href="https://${randomDomain}/dynamic-${linkCounter}">Link Malicioso Dinâmico ${linkCounter} (${randomDomain})</a>`;
+            container.appendChild(link);
+            linkCounter++;
+        }
+
+        function addMultipleMaliciousLinks() {
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => addMaliciousLink(), i * 500); // Adiciona com delay para testar detecção em tempo real
+            }
+        }
+
+        // Log para debug
+        console.log('🧪 Página de teste Phishy carregada');
+        console.log('📊 Verifique o console para logs da extensão');
+        
+        // Listener para verificar se a extensão está funcionando
+        setTimeout(() => {
+            const maliciousLinks = document.querySelectorAll('.phishy-malicious-highlight');
+            if (maliciousLinks.length > 0) {
+                console.log(`✅ Extensão funcionando! ${maliciousLinks.length} links maliciosos detectados`);
+            } else {
+                console.log('⚠️ Nenhum link malicioso foi destacado - verifique se a extensão está ativa');
+            }
+        }, 3000);
+    </script>
+</body>
+</html>

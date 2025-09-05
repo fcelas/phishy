@@ -36,9 +36,9 @@ class PhishyBackground {
 
     async initializeConfig() {
         try {
-            // Import logger and config manager (if available in background context)
-            if (typeof importScripts === 'function') {
-                importScripts('logger.js', 'config-manager.js');
+            // Import scripts for service worker
+            try {
+                importScripts('./logger.js', './config-manager.js', './security.js', './claude-api.js');
                 
                 if (typeof PhishyLogger !== 'undefined') {
                     this.logger = new PhishyLogger();
@@ -50,6 +50,8 @@ class PhishyBackground {
                     this.config = configManager.config;
                     this.isDemoMode = configManager.isDemoModeActive();
                 }
+            } catch (importError) {
+                console.warn('Failed to import scripts:', importError);
             }
             
             // Fallback to console logging
@@ -68,7 +70,7 @@ class PhishyBackground {
             }, 'BACKGROUND');
             
         } catch (error) {
-            console.error('Failed to initialize background config:', error);
+            this.logger.error('Failed to initialize background config', error, 'BACKGROUND');
             this.logger = console;
             this.isDemoMode = true;
         }
@@ -172,7 +174,7 @@ class PhishyBackground {
                     sendResponse({ error: 'Unknown action' });
             }
         } catch (error) {
-            console.error('Phishy Background Error:', error);
+            this.logger.error('Phishy Background Error', error, 'BACKGROUND');
             sendResponse({ error: error.message });
         }
     }
@@ -206,7 +208,7 @@ class PhishyBackground {
 
             return { isMalicious: false };
         } catch (error) {
-            console.error('URL Analysis Error:', error);
+            this.logger.error('URL Analysis Error', error, 'BACKGROUND');
             return { isMalicious: false, error: error.message };
         }
     }
@@ -225,7 +227,17 @@ class PhishyBackground {
             const apiUrl = `${baseUrl}${endpoint}?apikey=${this.config.virustotal.apiKey}&resource=${encodeURIComponent(url)}`;
             
             const response = await fetch(apiUrl);
-            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const responseText = await response.text();
+            if (!responseText.trim()) {
+                throw new Error('Empty response from VirusTotal API');
+            }
+            
+            const data = JSON.parse(responseText);
 
             if (data.response_code === 1 && data.positives > 0) {
                 const confidence = Math.min((data.positives / data.total) * 100, 100);
@@ -292,14 +304,11 @@ class PhishyBackground {
 
     async getAIAnalysis(url, vtResult) {
         try {
-            // Placeholder for Claude AI integration
-            // This will be implemented when Claude API key is provided
-            if (this.claudeApiKey === 'YOUR_CLAUDE_API_KEY_HERE') {
-                return {
-                    summary: `Ameaça detectada: ${vtResult.threatType}. Confiança: ${vtResult.confidence}%. Recomenda-se não acessar este site.`,
-                    recommendation: 'block',
-                    riskLevel: vtResult.confidence > 80 ? 'high' : vtResult.confidence > 50 ? 'medium' : 'low'
-                };
+            // Use demo mode if no config or in demo mode
+            if (this.isDemoMode || !this.config?.claude?.apiKey || 
+                this.config.claude.apiKey === 'DEMO_MODE' || 
+                this.config.claude.apiKey.includes('YOUR_')) {
+                return this.getDemoAIAnalysis(vtResult);
             }
 
             const prompt = `Analyze this potential security threat:
@@ -311,16 +320,18 @@ Categories: ${vtResult.categories.join(', ')}
 
 Provide a brief Portuguese summary for the user explaining the threat and recommendation.`;
 
-            const response = await fetch('https://api.anthropic.com/v1/messages', {
+            const baseUrl = this.config.claude.baseUrl || 'https://api.anthropic.com/v1';
+            const response = await fetch(`${baseUrl}/messages`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${this.claudeApiKey}`,
+                    'x-api-key': this.config.claude.apiKey,
                     'anthropic-version': '2023-06-01'
                 },
                 body: JSON.stringify({
-                    model: 'claude-3-sonnet-20240229',
-                    max_tokens: 150,
+                    model: this.config.claude.model || 'claude-3-haiku-20240307',
+                    max_tokens: this.config.claude.maxTokens || 150,
+                    temperature: this.config.claude.temperature || 0.1,
                     messages: [{
                         role: 'user',
                         content: prompt
@@ -333,16 +344,30 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
             return {
                 summary: aiData.content[0].text,
                 recommendation: vtResult.confidence > 70 ? 'block' : 'warn',
-                riskLevel: vtResult.confidence > 80 ? 'high' : vtResult.confidence > 50 ? 'medium' : 'low'
+                riskLevel: vtResult.confidence > 80 ? 'high' : vtResult.confidence > 50 ? 'medium' : 'low',
+                source: 'claude-ai'
             };
         } catch (error) {
-            console.error('AI Analysis Error:', error);
-            return {
-                summary: `Ameaça ${vtResult.threatType} detectada com ${vtResult.confidence}% de confiança. Recomenda-se cautela.`,
-                recommendation: 'warn',
-                riskLevel: 'medium'
-            };
+            this.logger.error('AI Analysis Error', error, 'BACKGROUND');
+            return this.getDemoAIAnalysis(vtResult);
         }
+    }
+
+    getDemoAIAnalysis(vtResult) {
+        // Fallback AI analysis for demo mode
+        const threats = {
+            phishing: 'Site de phishing detectado. Este site pode estar tentando roubar suas credenciais ou informações pessoais.',
+            malware: 'Site com malware detectado. Pode conter software malicioso que danifica seu dispositivo.',
+            typosquatting: 'Possível typosquatting detectado. Site similar a domínios legítimos para enganar usuários.',
+            suspicious: 'Atividade suspeita detectada. Recomenda-se cautela ao acessar este site.'
+        };
+
+        return {
+            summary: threats[vtResult.threatType] || `Ameaça ${vtResult.threatType} detectada com ${vtResult.confidence}% de confiança. Recomenda-se cautela.`,
+            recommendation: vtResult.confidence > 70 ? 'block' : 'warn',
+            riskLevel: vtResult.confidence > 80 ? 'high' : vtResult.confidence > 50 ? 'medium' : 'low',
+            source: 'demo'
+        };
     }
 
     async logThreat(url, vtResult, aiAnalysis) {
@@ -459,7 +484,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
             const result = await chrome.storage.sync.get(['alertHistory']);
             return result.alertHistory || [];
         } catch (error) {
-            console.error('Error getting alert history:', error);
+            this.logger.error('Error getting alert history', error, 'BACKGROUND');
             return [];
         }
     }
@@ -480,7 +505,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
             
             return null;
         } catch (error) {
-            console.error('Error getting alert details:', error);
+            this.logger.error('Error getting alert details', error, 'BACKGROUND');
             return null;
         }
     }
@@ -516,13 +541,13 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
                 await chrome.storage.sync.set({ whitelist });
                 
                 // Log whitelist addition
-                console.log('Added to whitelist:', cleanUrl);
+                this.logger.info('Added to whitelist', { url: cleanUrl }, 'BACKGROUND');
                 return true;
             }
             
             return true; // Already in whitelist
         } catch (error) {
-            console.error('Error adding to whitelist:', error);
+            this.logger.error('Error adding to whitelist', error, 'BACKGROUND');
             return false;
         }
     }
@@ -535,7 +560,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
                 noAnalysisUrls: result.noAnalysisUrls || []
             };
         } catch (error) {
-            console.error('Error getting whitelists:', error);
+            this.logger.error('Error getting whitelists', error, 'BACKGROUND');
             return { pauseUrls: [], noAnalysisUrls: [] };
         }
     }
@@ -543,9 +568,9 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
     async updatePauseUrls(urls) {
         try {
             await chrome.storage.sync.set({ pauseUrls: urls });
-            console.log('Pause URLs updated:', urls);
+            this.logger.info('Pause URLs updated', { urls }, 'BACKGROUND');
         } catch (error) {
-            console.error('Error updating pause URLs:', error);
+            this.logger.error('Error updating pause URLs', error, 'BACKGROUND');
             throw error;
         }
     }
@@ -553,9 +578,9 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
     async updateNoAnalysisUrls(urls) {
         try {
             await chrome.storage.sync.set({ noAnalysisUrls: urls });
-            console.log('No analysis URLs updated:', urls);
+            this.logger.info('No analysis URLs updated', { urls }, 'BACKGROUND');
         } catch (error) {
-            console.error('Error updating no analysis URLs:', error);
+            this.logger.error('Error updating no analysis URLs', error, 'BACKGROUND');
             throw error;
         }
     }
@@ -569,7 +594,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
                 notifications: true
             };
         } catch (error) {
-            console.error('Error getting settings:', error);
+            this.logger.error('Error getting settings', error, 'BACKGROUND');
             return {
                 protectionLevel: 'alto',
                 autoBlock: true,
@@ -581,7 +606,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
     async updateSettings(settings) {
         try {
             await chrome.storage.sync.set({ extensionSettings: settings });
-            console.log('Settings updated:', settings);
+            this.logger.info('Settings updated', { settings }, 'BACKGROUND');
             
             // Update confidence threshold based on protection level
             const thresholds = {
@@ -592,7 +617,7 @@ Provide a brief Portuguese summary for the user explaining the threat and recomm
             
             this.confidenceThreshold = thresholds[settings.protectionLevel] || 60;
         } catch (error) {
-            console.error('Error updating settings:', error);
+            this.logger.error('Error updating settings', error, 'BACKGROUND');
             throw error;
         }
     }

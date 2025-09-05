@@ -23,32 +23,85 @@ class PhishyDashboard {
     async loadData() {
         try {
             // Get current page info
-            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-            if (tab) {
-                this.currentPage = {
-                    url: new URL(tab.url).hostname,
-                    fullUrl: tab.url
-                };
+            try {
+                const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                if (tab && tab.url) {
+                    try {
+                        this.currentPage = {
+                            url: new URL(tab.url).hostname,
+                            fullUrl: tab.url
+                        };
+                    } catch (urlError) {
+                        this.currentPage = {
+                            url: 'extensão',
+                            fullUrl: tab.url
+                        };
+                    }
+                }
+            } catch (tabError) {
+                console.warn('Could not get current tab:', tabError);
+                this.currentPage = { url: 'N/A', fullUrl: '' };
             }
 
-            // Get stats
-            const response = await chrome.runtime.sendMessage({ action: 'getStats' });
-            if (response && response.stats) {
-                this.stats = response.stats;
-                this.pageStats = response.pageStats || {};
+            // Get stats with timeout and fallback
+            try {
+                const response = await this.sendMessageWithTimeout({ action: 'getStats' }, 2000);
+                if (response && response.stats) {
+                    this.stats = response.stats;
+                    this.pageStats = response.pageStats || {};
+                } else {
+                    // Fallback stats
+                    this.stats = { totalBlocked: 0, linksBlocked: 0, threatsToday: 0 };
+                    this.pageStats = {};
+                }
+            } catch (statsError) {
+                console.warn('Could not get stats:', statsError);
+                this.stats = { totalBlocked: 0, linksBlocked: 0, threatsToday: 0 };
+                this.pageStats = {};
             }
 
-            // Get protection status
-            const statusResponse = await chrome.runtime.sendMessage({ action: 'getProtectionStatus' });
-            if (statusResponse) {
-                this.protectionEnabled = statusResponse.enabled;
+            // Get protection status with fallback
+            try {
+                const statusResponse = await this.sendMessageWithTimeout({ action: 'getProtectionStatus' }, 2000);
+                if (statusResponse && typeof statusResponse.enabled === 'boolean') {
+                    this.protectionEnabled = statusResponse.enabled;
+                } else {
+                    // Check from storage as fallback
+                    const storageResult = await chrome.storage.sync.get(['protectionEnabled']);
+                    this.protectionEnabled = storageResult.protectionEnabled !== false;
+                }
+            } catch (statusError) {
+                console.warn('Could not get protection status:', statusError);
+                this.protectionEnabled = true; // Default to enabled
             }
 
             this.updateUI();
         } catch (error) {
             console.error('Error loading data:', error);
-            this.showError('Erro ao carregar dados');
+            this.showError('Modo offline - funcionalidade limitada');
+            // Set fallback values
+            this.currentPage = { url: 'N/A', fullUrl: '' };
+            this.stats = { totalBlocked: 0, linksBlocked: 0, threatsToday: 0 };
+            this.protectionEnabled = true;
+            this.updateUI();
         }
+    }
+
+    async sendMessageWithTimeout(message, timeout = 3000) {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                reject(new Error('Message timeout'));
+            }, timeout);
+
+            chrome.runtime.sendMessage(message, (response) => {
+                clearTimeout(timer);
+                if (chrome.runtime.lastError) {
+                    reject(new Error(chrome.runtime.lastError.message));
+                } else {
+                    resolve(response);
+                }
+            });
+        });
     }
 
     setupEventListeners() {

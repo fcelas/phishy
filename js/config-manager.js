@@ -251,12 +251,18 @@ class PhishyConfigManager {
 
         // Validate API keys (unless in demo mode)
         if (!this.isDemoMode) {
-            if (!config.virustotal.apiKey || config.virustotal.apiKey.includes('YOUR_')) {
-                this.logger.warn('Invalid VirusTotal API key detected', null, 'CONFIG');
+            if (!config.virustotal?.apiKey || config.virustotal.apiKey.includes('YOUR_')) {
+                this.logger.warn('Invalid VirusTotal API key detected', { 
+                    hasKey: !!config.virustotal?.apiKey,
+                    keyLength: config.virustotal?.apiKey?.length || 0 
+                }, 'CONFIG');
             }
             
-            if (!config.claude.apiKey || config.claude.apiKey.includes('YOUR_')) {
-                this.logger.warn('Invalid Claude API key detected', null, 'CONFIG');
+            if (!config.claude?.apiKey || config.claude.apiKey.includes('YOUR_')) {
+                this.logger.warn('Invalid Claude API key detected', { 
+                    hasKey: !!config.claude?.apiKey,
+                    keyLength: config.claude?.apiKey?.length || 0 
+                }, 'CONFIG');
             }
         }
 

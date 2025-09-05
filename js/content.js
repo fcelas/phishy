@@ -7,6 +7,9 @@ class PhishyContentScript {
     }
 
     async init() {
+        // Inject styles first
+        this.injectStyles();
+        
         // Get protection status from storage
         const result = await chrome.storage.sync.get(['protectionEnabled']);
         this.isProtectionActive = result.protectionEnabled !== false;
@@ -115,32 +118,44 @@ class PhishyContentScript {
     }
 
     handleMaliciousLink(linkElement, analysisResult) {
-        // Add warning class
-        linkElement.classList.add('phishy-warning');
+        // Add warning classes for red highlight
+        linkElement.classList.add('phishy-warning', 'phishy-malicious-highlight');
         
-        // Create warning overlay
-        const warning = document.createElement('div');
-        warning.className = 'phishy-link-warning';
-        warning.innerHTML = `
-            <div class="phishy-warning-content">
-                <span class="phishy-warning-icon">⚠️</span>
-                <span class="phishy-warning-text">Link Suspeito</span>
-            </div>
-        `;
-
-        // Position warning
-        linkElement.style.position = 'relative';
-        linkElement.appendChild(warning);
+        // Add data attribute for threat info
+        linkElement.setAttribute('data-phishy-threat', analysisResult.threatType || 'suspicious');
+        linkElement.setAttribute('data-phishy-confidence', analysisResult.confidence || '0');
+        
+        // Create warning badge
+        const warningBadge = document.createElement('span');
+        warningBadge.className = 'phishy-threat-badge';
+        warningBadge.innerHTML = '🚨';
+        warningBadge.title = `Ameaça detectada: ${analysisResult.threatType || 'Suspeito'} (${analysisResult.confidence || 'N/A'}% confiança)`;
+        
+        // Insert badge before the link text
+        if (linkElement.firstChild) {
+            linkElement.insertBefore(warningBadge, linkElement.firstChild);
+        } else {
+            linkElement.appendChild(warningBadge);
+        }
 
         // Block click and show detailed warning
+        const originalHref = linkElement.href;
         linkElement.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            this.showDetailedWarning(linkElement.href, analysisResult);
-        });
+            this.showDetailedWarning(originalHref, analysisResult);
+        }, { capture: true });
+        
+        // Also block other navigation events
+        linkElement.addEventListener('auxclick', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, { capture: true });
 
         // Update statistics
         this.updateStats('block');
+        
+        console.log(`🔴 Phishy: Malicious link blocked and highlighted - ${originalHref}`);
     }
 
     showDetailedWarning(url, analysisResult) {
@@ -153,14 +168,14 @@ class PhishyContentScript {
                     <button class="phishy-close-btn">&times;</button>
                 </div>
                 <div class="phishy-modal-body">
-                    <p><strong>URL:</strong> ${url}</p>
-                    <p><strong>Ameaça:</strong> ${analysisResult.threatType || 'Desconhecida'}</p>
-                    <p><strong>Confiança:</strong> ${analysisResult.confidence || 'N/A'}</p>
+                    <p><strong>URL:</strong> ${this.sanitizeHtml(url)}</p>
+                    <p><strong>Ameaça:</strong> ${this.sanitizeHtml(analysisResult.threatType || 'Desconhecida')}</p>
+                    <p><strong>Confiança:</strong> ${this.sanitizeHtml(analysisResult.confidence || 'N/A')}%</p>
                     <div class="phishy-modal-actions">
-                        <button class="phishy-btn phishy-btn-danger" onclick="this.closest('.phishy-modal').remove()">
+                        <button class="phishy-btn phishy-btn-danger phishy-cancel-btn">
                             Cancelar
                         </button>
-                        <button class="phishy-btn phishy-btn-warning" onclick="this.proceedToLink('${url}')">
+                        <button class="phishy-btn phishy-btn-warning phishy-proceed-btn">
                             Prosseguir Mesmo Assim
                         </button>
                     </div>
@@ -171,16 +186,36 @@ class PhishyContentScript {
         document.body.appendChild(modal);
 
         // Close button handler
-        modal.querySelector('.phishy-close-btn').onclick = () => modal.remove();
-        modal.onclick = (e) => {
-            if (e.target === modal) modal.remove();
+        const closeBtn = modal.querySelector('.phishy-close-btn');
+        const cancelBtn = modal.querySelector('.phishy-cancel-btn');
+        const proceedBtn = modal.querySelector('.phishy-proceed-btn');
+        
+        const closeModal = () => {
+            if (modal.parentNode) {
+                modal.parentNode.removeChild(modal);
+            }
         };
+        
+        closeBtn.addEventListener('click', closeModal);
+        cancelBtn.addEventListener('click', closeModal);
+        
+        // Background click to close
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
 
         // Proceed button handler
-        window.proceedToLink = (url) => {
-            modal.remove();
+        proceedBtn.addEventListener('click', () => {
+            closeModal();
             window.open(url, '_blank');
-        };
+        });
+    }
+
+    sanitizeHtml(str) {
+        if (!str) return '';
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
     }
 
     updateStats(type) {
@@ -205,23 +240,93 @@ class PhishyContentScript {
         const style = document.createElement('style');
         style.id = 'phishy-styles';
         style.textContent = `
-            .phishy-warning {
-                border: 2px solid #F95840 !important;
-                background-color: rgba(249, 88, 64, 0.1) !important;
+            /* Red highlight for malicious links - like a highlighter marker */
+            .phishy-malicious-highlight {
+                background: linear-gradient(120deg, #ff4757 0%, #ff3742 100%) !important;
+                color: white !important;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.5) !important;
+                padding: 3px 8px !important;
+                margin: 0 2px !important;
+                border-radius: 6px !important;
+                border: 2px solid #ff1744 !important;
+                box-shadow: 0 3px 10px rgba(255, 71, 87, 0.5) !important;
+                text-decoration: none !important;
+                font-weight: 700 !important;
+                display: inline-block !important;
+                transition: all 0.3s ease !important;
+                position: relative !important;
+                z-index: 100 !important;
+                cursor: not-allowed !important;
+                min-height: 20px !important;
+                line-height: 1.2 !important;
+            }
+            
+            .phishy-malicious-highlight:hover {
+                background: linear-gradient(120deg, #ff3742 0%, #ff1744 100%) !important;
+                transform: translateY(-1px) !important;
+                box-shadow: 0 4px 12px rgba(255, 71, 87, 0.6) !important;
+            }
+            
+            .phishy-malicious-highlight:before {
+                content: '';
+                position: absolute;
+                top: -2px;
+                left: -2px;
+                right: -2px;
+                bottom: -2px;
+                background: linear-gradient(45deg, #ff4757, #ff3742, #ff1744, #ff4757);
+                border-radius: 6px;
+                z-index: -1;
+                animation: phishyGlow 2s ease-in-out infinite alternate;
+            }
+            
+            @keyframes phishyGlow {
+                from {
+                    box-shadow: 0 0 5px rgba(255, 71, 87, 0.4);
+                }
+                to {
+                    box-shadow: 0 0 15px rgba(255, 71, 87, 0.8), 0 0 25px rgba(255, 71, 87, 0.4);
+                }
+            }
+            
+            .phishy-threat-badge {
+                margin-right: 4px !important;
+                font-size: 12px !important;
+                animation: phishyPulse 1.5s ease-in-out infinite;
+            }
+            
+            @keyframes phishyPulse {
+                0%, 100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.1);
+                }
             }
 
-            .phishy-link-warning {
+            /* Tooltip for additional threat info */
+            .phishy-malicious-highlight:after {
+                content: attr(data-phishy-threat) ' - ' attr(data-phishy-confidence) '% confiança';
                 position: absolute;
-                top: -25px;
-                left: 0;
-                background: #F95840;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background: rgba(0, 0, 0, 0.9);
                 color: white;
-                padding: 2px 6px;
-                border-radius: 3px;
-                font-size: 10px;
-                font-weight: bold;
-                z-index: 1000;
+                padding: 4px 8px;
+                border-radius: 4px;
+                font-size: 11px;
+                font-weight: normal;
+                white-space: nowrap;
+                opacity: 0;
                 pointer-events: none;
+                transition: opacity 0.2s ease;
+                z-index: 1001;
+                margin-bottom: 5px;
+            }
+            
+            .phishy-malicious-highlight:hover:after {
+                opacity: 1;
             }
 
             .phishy-warning-content {

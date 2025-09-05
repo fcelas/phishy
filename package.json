@@ -1,0 +1,57 @@
+{
+  "name": "phishy-anti-phishing-extension",
+  "version": "1.0.0", 
+  "description": "Real-time anti-phishing protection Chrome extension with VirusTotal and Claude AI integration",
+  "main": "js/background.js",
+  "scripts": {
+    "test": "node tests/run-tests.js",
+    "build": "node scripts/build.js",
+    "deploy": "node scripts/deploy-to-webstore.js",
+    "validate": "node scripts/validate-manifest.js",
+    "dev": "echo 'Copy config.template.js to config.local.js and add your API keys'",
+    "clean": "rm -rf build/ dist/ *.zip"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fcelas/phishy.git"
+  },
+  "keywords": [
+    "chrome-extension",
+    "anti-phishing",
+    "security",
+    "virustotal",
+    "claude-ai",
+    "threat-detection",
+    "cybersecurity"
+  ],
+  "author": "fcelas",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "devDependencies": {},
+  "dependencies": {},
+  "files": [
+    "manifest.json",
+    "popup.html", 
+    "js/",
+    "css/",
+    "icons/",
+    "config/config.template.js"
+  ],
+  "extensionConfig": {
+    "manifestVersion": 3,
+    "chromeVersion": "88+",
+    "apis": [
+      "VirusTotal V2 API",
+      "Claude AI API"
+    ],
+    "permissions": [
+      "activeTab",
+      "storage", 
+      "scripting",
+      "tabs",
+      "declarativeNetRequest"
+    ]
+  }
+}
